@@ -14,7 +14,7 @@ database script for the leaderboards.
 | `og.png` | The preview image when someone shares your link |
 | `robots.txt`, `sitemap.xml` | Search engine basics |
 | `vercel.json`, `_headers` | Host settings (Vercel uses the first, Netlify and Cloudflare Pages the second) |
-| `supabase/schema.sql` | Leaderboard database: tables, rules and the two functions the game calls |
+| `supabase/schema.sql` | Database for profiles, leaderboards and the Caddy Cup |
 
 ## 1. Put it online (about 10 minutes)
 
@@ -36,35 +36,58 @@ Go to app.netlify.com/drop and drag this whole folder onto the page. Done.
    `robots.txt`, `sitemap.xml`, `privacy.html` and `terms.html`. Also replace the contact address
    `hello@clutchcaddy.com` with a real inbox.
 
-## 3. Turn on the live leaderboards (Supabase, free to start)
+## 3. Turn on profiles, leaderboards and the Caddy Cup (Supabase, free to start)
 
-Until this step the game runs in preview mode: players can post names, but scores are saved on their
-own device only.
+Until this step the game runs in preview mode: players can make a profile and post scores, but
+everything is saved on their own device only.
 
 1. Create an account at supabase.com and a new project (any region in the US is fine).
 2. In the project, open SQL Editor > New query, paste all of `supabase/schema.sql`, and click Run.
-3. Open Project Settings > API. Copy the Project URL and the `anon` `public` key.
+   It is safe to run again later when the file changes.
+3. Open Project Settings > API Keys. Copy the Project URL and the publishable key (`sb_publishable_...`).
+   The older `anon` `public` key also works.
 4. Paste both into `config.js`:
    ```js
    window.CC_CONFIG = {
      supabaseUrl: 'https://YOURPROJECT.supabase.co',
-     supabaseAnonKey: 'eyJhbGciOi...',
+     supabaseAnonKey: 'sb_publishable_...',
      period: 'week'
    };
    ```
-5. Commit the change. Vercel redeploys on its own and the leaderboards are live.
+5. Commit the change. Vercel redeploys on its own and everything is live.
 
-The anon key is meant to be public. The database only lets it call two functions: `submit_score` and
-`get_board`. Those functions check the board date, the score range and the name, and keep only the
-first score each player posts on each board.
+The publishable key is meant to be public. The tables are locked, and the key can only call these
+functions, which do all the checking:
+
+| Function | What it does |
+|---|---|
+| `create_player` | Makes a profile from a name (no email) and returns a player code like `CC-1A2B-3C4D-5E6F-7A8B` |
+| `login_with_code` | Signs in on a new device with that code |
+| `submit_score` | Posts a ranked daily or weekly score. Needs a profile. Keeps only the first post per board |
+| `get_board` | One leaderboard, with ranks and Caddy Cup points |
+| `get_caddy_cup` | Season standings |
+| `get_player_stats` | The profile page: rank, points, wins, top 10s, averages, recent results |
+
+**Profiles:** names are unique (ignoring case) and run through the blocked word list. Player codes
+are stored hashed, so nobody (including you) can read them from the database. A lost code cannot be
+recovered, and the game tells players to save it.
+
+**Caddy Cup points** (worked out live from each board, so they update as more people play):
+- Daily: 10 for posting, up to 90 more for the share of the field you beat, plus 50, 30 or 20 for 1st, 2nd or 3rd.
+- Weekly 18: three times a daily.
+- Seasons live in the `seasons` table. Season 1 runs Nov 1, 2026 to Mar 31, 2027. To add the next one:
+  `insert into public.seasons (name, starts, ends) values ('Season 2', '2027-04-01', '2027-08-31');`
 
 **Boards**
 - Daily: `daily:YYYY-MM-DD` (US Eastern date), ranked by strokes, then clutch rating
 - Weekly: `weekly:YYYY-MM-DD` (the Monday the week started), ranked by total to par, then rating
 - Monthly: `monthly:YYYY-MM` if you switch `period` to `'month'`
 
-**Moderation:** in the SQL Editor, `delete from public.scores where name = 'BadName';`. To block a word
-from names, `insert into public.blocked_words (w) values ('word');`.
+**Moderation** (SQL Editor):
+- Rename a player: `update public.players set name = 'NewName' where lower(name) = 'badname';`
+  then `update public.scores set name = 'NewName' where name = 'BadName';`
+- Remove a score: `delete from public.scores where board = 'daily:2026-11-06' and name = 'SomeName';`
+- Block a word from names: `insert into public.blocked_words (w) values ('word');`
 
 ## 4. Weekly challenge settings
 
@@ -94,9 +117,8 @@ In this folder run `python3 -m http.server 8000` and open http://localhost:8000.
 - Shot luck is calculated in the browser, so a determined cheater could post a fake score. The
   database blocks impossible scores and repeat posts. The full fix is moving shot results to a
   Supabase Edge Function so the server decides every shot.
-- Players are identified by a random ID saved in their browser. Clearing site data or switching
-  devices gives them a new ID. Adding sign-in later (Supabase Auth: email link or Google/Apple)
-  fixes that and lets streaks follow people across devices.
+- Profiles use a player code instead of email, so a lost code means a lost profile. An optional
+  email or Google/Apple sign-in could be added later for recovery.
 
 ## Costs
 

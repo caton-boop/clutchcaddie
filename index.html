@@ -368,6 +368,7 @@ h1{font-size:clamp(36px,6vw,54px)} h2{font-size:28px} h3{font-size:20px;font-wei
 .score{font-family:var(--display);font-weight:800}
 .score.birdie,.score.eagle{border-color:var(--turf)} .score.bogey,.score.dbl{border-color:var(--muted)}
 .stat .big{font-family:var(--display);font-weight:800;letter-spacing:-.03em}
+.pstats{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.pstats .stat{padding:12px 14px;gap:4px}.pstats .stat .big{font-size:32px}.pstats .stat span:last-child{font-size:14px;color:var(--muted)}#pstats h3{margin-top:24px}
 .tbl{overflow:hidden}
 th{text-transform:none;letter-spacing:0;font-size:12px;font-weight:600;border-bottom:1px solid var(--line)}
 td{border-bottom:1px solid var(--line)}
@@ -497,6 +498,24 @@ dialog#settings h2{margin:0 0 10px}
 .shapesel{appearance:none;-webkit-appearance:none;font:inherit;font-weight:700;font-size:15px;color:var(--ink);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23889488' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center/11px 8px;border:0;box-shadow:inset 0 0 0 1px var(--line);border-radius:999px;padding:8px 34px 8px 14px;cursor:pointer}
 .shapesel:focus-visible{outline:2px solid var(--turf);outline-offset:1px}
 @media (max-width:820px){.ab-main .shapesel{font-size:13px;padding:5px 28px 5px 10px;background-position:right 10px center}}
+
+/* profiles + Caddy Cup */
+.cupcard{background:var(--card);border-radius:24px;padding:18px 20px;display:grid;gap:8px}
+.cuphead{display:flex;justify-content:space-between;align-items:center}
+.cupcard h2{font-size:22px;margin:0}.cupyou{margin:0;font-size:16px}
+.cuptop{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:6px}
+.cuptop li{display:grid;grid-template-columns:28px 1fr auto;align-items:center;background:var(--surface);border-radius:12px;padding:8px 12px;font-weight:600}
+.cuptop li.you{box-shadow:inset 0 0 0 2px var(--turf)}.cuptop .cr{font-family:var(--display);font-weight:800;color:var(--turf)}.cuptop .cp{color:var(--muted);font-size:14px}
+.postbox{display:grid;gap:8px;background:var(--card);border-radius:18px;padding:14px}.postbox p{margin:0}.postbox .err{color:var(--g-miss);font-size:13px;min-height:1em}
+.earned{margin:0;font-size:17px;font-weight:800;color:var(--turf)}.earned .small{font-weight:500}
+.codecard{background:var(--card);border-radius:18px;padding:14px;display:grid;gap:8px}
+.codecard.fresh{background:var(--turf-soft);box-shadow:inset 0 0 0 2px var(--turf)}
+.coderow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pcode{font:700 18px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.04em;background:var(--surface);border-radius:12px;padding:10px 12px;flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+.codecard .small{margin:0}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:var(--turf);font-weight:700;text-decoration:underline;cursor:pointer}
+.prof .nameform+.nameform{margin-top:2px}
+.howpts{background:var(--card);border-radius:16px;padding:10px 14px}.howpts summary{cursor:pointer;font-weight:700}.howpts ul{margin:8px 0 2px;padding-left:18px;display:grid;gap:4px;font-size:14px}
 /* bottom bars */
 @media (max-width:820px){
   .aimbar{border-top:0;border-radius:22px 22px 0 0;background:color-mix(in srgb,var(--surface) 97%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(16px);box-shadow:0 -6px 30px rgba(0,0,0,.12)}
@@ -514,7 +533,7 @@ dialog#settings h2{margin:0 0 10px}
       <svg viewBox="0 0 18 24" aria-hidden="true"><line x1="3" y1="1" x2="3" y2="23" stroke="currentColor" stroke-width="2"/><path d="M4 2 L17 6.5 L4 11 Z" fill="var(--flag)"/></svg>
       Clutch Caddie
     </button>
-    <span class="hdr-r"><span class="day" id="daylabel"></span><button class="gear" id="settingsBtn" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button></span>
+    <span class="hdr-r"><span class="day" id="daylabel"></span><button class="gear" id="profileBtn" aria-label="Your profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="gear" id="settingsBtn" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button></span>
   </header>
   <dialog id="settings" aria-labelledby="setTitle"><form method="dialog">
     <h2 id="setTitle">Settings</h2>
@@ -1656,55 +1675,190 @@ function startWeekly(){const st=store.get(WKEY);
   if(st&&st.g&&st.round&&st.round.id===weeklyRound.id){ROUND=st.round;ROUND.ranked=true;restoreG(st.g);window.scrollTo({top:0});return;}
   ROUND={id:weeklyRound.id,i:0,scores:[],calls:[],lost:[],ranked:true};startHoleN();window.scrollTo({top:0});}
 
-/* ===== Leaderboards. Live when CC_CONFIG has supabaseUrl + supabaseAnonKey, otherwise a device-only preview. ===== */
+/* ===== Profiles, leaderboards and the Caddy Cup.
+   Live when CC_CONFIG has supabaseUrl + supabaseAnonKey. Otherwise everything runs as a device-only preview. ===== */
 const LB_LIVE=!!(CC.supabaseUrl&&CC.supabaseAnonKey);
-const playerId=(()=>{let id=store.get('cc:pid');if(!id){id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16);});store.set('cc:pid',id);}return id;})();
+const newId=()=>(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16);});
+function anonId(){let id=store.get('cc:pid');if(!id){id=newId();store.set('cc:pid',id);}return id;}
+const profile=()=>store.get('cc:profile');
+const pid=()=>{const p=profile();return p&&p.id?p.id:anonId();};
+const subKey=board=>'cc:sub:'+pid()+':'+board;
 const BADWORDS=['fuck','shit','cunt','nigg','fagg','bitch','pussy','whore','slut','rapist','nazi','hitler','kike','retard','twat','wank','cocksuck','dickhead'];
 function cleanName(s){s=String(s||'').replace(/\s+/g,' ').trim();
   if(!/^[A-Za-z0-9 ._'-]{2,16}$/.test(s))return{err:'Use 2 to 16 letters, numbers, spaces, dots, dashes or apostrophes.'};
   const l=s.toLowerCase().replace(/[0134578]/g,c=>'oieastb'['0134578'.indexOf(c)]).replace(/[^a-z]/g,'');if(BADWORDS.some(w=>l.includes(w)))return{err:'Please pick a different name.'};return{name:s};}
 const lbHeaders=()=>{const k=CC.supabaseAnonKey,o={apikey:k,'Content-Type':'application/json'};if(/^eyJ/.test(k))o.Authorization='Bearer '+k;return o;};
-const BOARD={
+async function rpc(fn,args){const r=await fetch(CC.supabaseUrl+'/rest/v1/rpc/'+fn,{method:'POST',headers:lbHeaders(),body:JSON.stringify(args)});
+  const t=await r.text();let j=null;try{j=t?JSON.parse(t):null;}catch(e){}if(!r.ok)throw new Error((j&&(j.message||j.hint))||t||'Request failed');return j;}
+function errMsg(e){const m=String(e&&e.message||'');return /name taken/.test(m)?'That name is taken. Try another.':/name not allowed|bad name/.test(m)?'Please pick a different name.':/code not found/.test(m)?"That code didn't match a player. Check it and try again.":/no profile/.test(m)?'Create a profile first.':/profile exists/.test(m)?'This device already has a profile.':'Something went wrong. Try again.';}
+function normCode(c){let s=String(c||'').toUpperCase().replace(/[^0-9A-Z]/g,'');if(s.startsWith('CC'))s=s.slice(2);return /^[0-9A-F]{16}$/.test(s)?'CC-'+s.match(/.{4}/g).join('-'):null;}
+function makeCode(){const b=new Uint8Array(8);(window.crypto||{}).getRandomValues?crypto.getRandomValues(b):b.forEach((_,i)=>b[i]=Math.random()*256|0);return 'CC-'+[...b].map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase().match(/.{4}/g).join('-');}
+
+/* Caddy Cup points: 10 for posting, up to 90 for how much of the field you beat, +50/30/20 for the top three. The weekly 18 counts x3. */
+const cupPoints=(kind,rank,field)=>(kind==='daily'?1:3)*(10+Math.round(90*(field>1?(field-rank)/(field-1):1))+(rank===1?50:rank===2?30:rank===3?20:0));
+const SEASON_LOCAL={name:'Season 1',starts:'2026-11-01',ends:'2027-03-31'};
+const boardKind=b=>b.split(':')[0],boardDate=b=>{const d=b.split(':')[1]||'';return d.length===7?d+'-01':d;};
+function rankRows(a){const s=a.slice().sort((x,y)=>x.score-y.score||y.rating-x.rating||x.t-y.t);let rank=0,prev=null;
+  return s.map((x,i)=>{if(!prev||x.score!==prev.score||x.rating!==prev.rating)rank=i+1;prev=x;return{...x,rank,field:s.length};});}
+const MOCK={players:()=>store.get('cc:mock:players')||[],
+  boards(){const out={};try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('cc:lb:'))out[k.slice(6)]=store.get(k)||[];}}catch(e){}return out;},
+  results(){const pl=MOCK.players(),out=[];for(const[b,a]of Object.entries(MOCK.boards()))for(const r of rankRows(a)){const p=pl.find(q=>q.id===r.pid);out.push({...r,board:b,kind:boardKind(b),bdate:boardDate(b),points:cupPoints(boardKind(b),r.rank,r.field),name:p?p.name:r.name,hasProfile:!!p});}return out;}};
+
+const API={
+  async createPlayer(name){
+    if(LB_LIVE)return rpc('create_player',{p_player:pid(),p_name:name});
+    const pl=MOCK.players();if(pl.some(p=>p.name.toLowerCase()===name.toLowerCase()))throw new Error('name taken');
+    const code=makeCode();pl.push({id:pid(),name,code});store.set('cc:mock:players',pl);return{player_id:pid(),name,code};},
+  async login(code){
+    const c=normCode(code);if(!c)throw new Error('code not found');
+    if(LB_LIVE)return rpc('login_with_code',{p_code:c});
+    const p=MOCK.players().find(q=>q.code===c);if(!p)throw new Error('code not found');return{player_id:p.id,name:p.name,code:c};},
   async submit(board,e){
-    if(LB_LIVE){const r=await fetch(CC.supabaseUrl+'/rest/v1/rpc/submit_score',{method:'POST',headers:lbHeaders(),body:JSON.stringify({p_board:board,p_player:playerId,p_name:e.name,p_score:e.score,p_rating:e.rating,p_detail:e.detail||null})});
-      if(!r.ok)throw new Error(await r.text());return;}
-    const k='cc:lb:'+board,a=store.get(k)||[];if(!a.some(x=>x.pid===playerId))a.push({pid:playerId,name:e.name,score:e.score,rating:e.rating,t:Date.now()});store.set(k,a);},
-  async top(board){
-    if(LB_LIVE){const r=await fetch(CC.supabaseUrl+'/rest/v1/rpc/get_board',{method:'POST',headers:lbHeaders(),body:JSON.stringify({p_board:board,p_player:playerId,p_limit:50})});
-      if(!r.ok)throw new Error(await r.text());return (await r.json()).map(x=>({rank:+x.rank,name:x.name,score:x.score,rating:x.rating,you:!!x.is_you,total:+x.total}));}
-    const a=(store.get('cc:lb:'+board)||[]).slice().sort((x,y)=>x.score-y.score||y.rating-x.rating||x.t-y.t);let rank=0,prev=null;
-    return a.map((x,i)=>{if(!prev||x.score!==prev.score||x.rating!==prev.rating)rank=i+1;prev=x;return{rank,name:x.name,score:x.score,rating:x.rating,you:x.pid===playerId,total:a.length};});}
+    const pr=profile();if(!pr)throw new Error('no profile');
+    if(LB_LIVE)return rpc('submit_score',{p_board:board,p_player:pr.id,p_name:pr.name,p_score:e.score,p_rating:e.rating,p_detail:e.detail||null});
+    const k='cc:lb:'+board,a=store.get(k)||[];if(!a.some(x=>x.pid===pr.id))a.push({pid:pr.id,name:pr.name,score:e.score,rating:e.rating,detail:e.detail||null,t:Date.now()});store.set(k,a);
+    const me=rankRows(a).find(x=>x.pid===pr.id);return{rank:me.rank,field:me.field,points:cupPoints(boardKind(board),me.rank,me.field)};},
+  async board(board){
+    if(LB_LIVE)return (await rpc('get_board',{p_board:board,p_player:pid(),p_limit:50})).map(x=>({rank:+x.rank,name:x.name,score:x.score,rating:x.rating,you:!!x.is_you,total:+x.total,points:x.points}));
+    const pl=MOCK.players();return rankRows(store.get('cc:lb:'+board)||[]).map(x=>({rank:x.rank,name:(pl.find(p=>p.id===x.pid)||x).name,score:x.score,rating:x.rating,you:x.pid===pid(),total:x.field,points:cupPoints(boardKind(board),x.rank,x.field)}));},
+  async cup(limit=100){
+    if(LB_LIVE)return (await rpc('get_caddy_cup',{p_player:pid(),p_limit:limit})).map(x=>({rank:+x.rank,name:x.name,points:+x.points,events:+x.events,wins:+x.wins,top10:+x.top10,you:!!x.is_you,total:+x.total,season:x.season,ends:x.season_ends}));
+    const S=SEASON_LOCAL,agg={};
+    for(const r of MOCK.results()){if(!r.hasProfile||r.bdate<S.starts||r.bdate>S.ends)continue;const a=agg[r.pid]||(agg[r.pid]={pid:r.pid,name:r.name,points:0,events:0,wins:0,top10:0});a.points+=r.points;a.events++;if(r.rank===1)a.wins++;if(r.rank<=10)a.top10++;}
+    const s=Object.values(agg).sort((x,y)=>y.points-x.points||x.name.localeCompare(y.name));let rank=0,prev=null;
+    return s.map((x,i)=>{if(!prev||x.points!==prev.points)rank=i+1;prev=x;return{...x,rank,you:x.pid===pid(),total:s.length,season:S.name,ends:S.ends};}).filter(x=>x.rank<=limit||x.you);},
+  async stats(){
+    if(LB_LIVE)return rpc('get_player_stats',{p_player:pid()});
+    const me=pid(),mine=MOCK.results().filter(r=>r.pid===me),cup=(await API.cup(1)).find(x=>x.you)||{},d=mine.filter(r=>r.kind==='daily'),w=mine.filter(r=>r.kind!=='daily'),withPar=d.filter(r=>r.detail&&r.detail.par);
+    return{name:(profile()||{}).name,season:SEASON_LOCAL.name,cup_rank:cup.rank||null,cup_points:cup.points||0,cup_field:cup.total||null,dailies:d.length,weeklies:w.length,
+      wins:mine.filter(r=>r.rank===1).length,top10:mine.filter(r=>r.rank<=10).length,beat_pro:mine.filter(r=>r.detail&&r.detail.beat).length,
+      daily_vs_par:withPar.length?withPar.reduce((s,r)=>s+r.score-r.detail.par,0)/withPar.length:null,best_weekly:w.length?Math.min(...w.map(r=>r.score)):null,
+      recent:mine.sort((a,b)=>b.bdate.localeCompare(a.bdate)).slice(0,14).map(r=>({board:r.board,kind:r.kind,bdate:r.bdate,score:r.score,rank:r.rank,field:r.field,points:r.points,par:r.detail&&r.detail.par}))};}
 };
+const previewNote=()=>LB_LIVE?'':'<p class="muted lbnote">Preview mode: profiles and scores are saved on this device only until the site is connected to its database.</p>';
+const ord=n=>n+(n%100>=11&&n%100<=13?'th':n%10===1?'st':n%10===2?'nd':n%10===3?'rd':'th');
+const placeStr=(rank,ties)=>(ties?'T':'')+ord(rank);
+function codeCardHTML(code,fresh){return `<div class="codecard${fresh?' fresh':''}">
+  <span class="lbl">${fresh?'Save your player code':'Player code'}</span>
+  <div class="coderow"><code class="pcode" data-code="${esc(code)}">${fresh?esc(code):esc(code.slice(0,3))+'••••-••••-••••-'+esc(code.slice(-4))}</code>
+    ${fresh?'':'<button class="btn sm" data-codeshow>Show</button>'}<button class="btn sm" data-codecopy>Copy</button></div>
+  <p class="muted small">${fresh?'This is your login. Use it to sign in on any phone or computer. There is no email, so if you lose it we cannot recover your profile. Screenshot it or save it somewhere safe.':'This code is your login. Anyone who has it can play as you, so keep it private.'}</p></div>`;}
+document.addEventListener('click',e=>{
+  const s=e.target.closest('[data-codeshow]'),c=e.target.closest('[data-codecopy]');
+  if(s){const el=s.parentElement.querySelector('.pcode');el.textContent=el.dataset.code;s.remove();}
+  if(c){const code=c.parentElement.querySelector('.pcode').dataset.code;const done=()=>{c.textContent='Copied';setTimeout(()=>{c.textContent='Copy';},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(done,()=>{});else{const t=document.createElement('textarea');t.value=code;document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(_){}t.remove();}}
+});
+async function doCreate(name){const c=cleanName(name);if(c.err)throw new Error(c.err);const r=await API.createPlayer(c.name);store.set('cc:profile',{id:r.player_id,name:r.name,code:r.code});return r;}
+
+/* ---- leaderboard block on end screens ---- */
 const lbHTML=id=>`<div class="lbbox" id="${id}"></div>`;
 function mountLB(id,board,opts){
-  const box=document.getElementById(id);if(!box)return;const sub=store.get('cc:sub:'+board);
-  const head=`<h3>${esc(opts.title)}</h3>${LB_LIVE?'':'<p class="muted lbnote">Preview: until the site is connected to its database, scores are saved on this device only.</p>'}`;
-  if(opts.entry&&!sub){
-    box.innerHTML=head+`<form class="nameform" novalidate><label for="${id}-n">Add your name to the leaderboard</label><div class="row"><input id="${id}-n" maxlength="16" autocomplete="nickname" placeholder="Your name" value="${esc(store.get('cc:name')||'')}"><button class="btn primary" type="submit">Post score</button></div><p class="err" aria-live="polite"></p></form><div class="lbt"></div>`;
+  const box=document.getElementById(id);if(!box)return;const sub=store.get(subKey(board)),pr=profile();
+  const head=`<h3>${esc(opts.title)}</h3>${previewNote()}`;
+  const after=(res,code)=>{store.set(subKey(board),1);mountLB(id,board,{...opts,entry:null,posted:res,fresh:code});};
+  if(opts.entry&&!sub&&pr){
+    box.innerHTML=head+`<div class="postbox"><p>Post your score as <b>${esc(pr.name)}</b> to earn Caddy Cup points.</p><div class="row"><button class="btn primary" data-post>Post score</button></div><p class="err" aria-live="polite"></p></div><div class="lbt"></div>`;
+    const b=box.querySelector('[data-post]');b.onclick=async()=>{b.disabled=true;try{after(await API.submit(board,opts.entry));}catch(e){b.disabled=false;box.querySelector('.err').textContent=errMsg(e);}};
+  }else if(opts.entry&&!sub){
+    box.innerHTML=head+`<form class="nameform" novalidate><label for="${id}-n">Create your profile to post this score</label><p class="muted small">Pick a name. No email needed. You'll get a player code to sign in on other devices.</p>
+      <div class="row"><input id="${id}-n" maxlength="16" autocomplete="nickname" placeholder="Your name"><button class="btn primary" type="submit">Create and post</button></div><p class="err" aria-live="polite"></p>
+      <p class="muted small">Already have a player code? <button type="button" class="linkbtn" data-act="profile">Sign in</button></p></form><div class="lbt"></div>`;
     const f=box.querySelector('form');
-    f.onsubmit=async ev=>{ev.preventDefault();const c=cleanName(f.querySelector('input').value),er=f.querySelector('.err');if(c.err){er.textContent=c.err;return;}
-      const btn=f.querySelector('button');btn.disabled=true;er.textContent='';
-      try{await BOARD.submit(board,{...opts.entry,name:c.name});store.set('cc:name',c.name);store.set('cc:sub:'+board,1);mountLB(id,board,{...opts,entry:null});}
-      catch(e){btn.disabled=false;er.textContent=/name/i.test(String(e.message))?'Please pick a different name.':'Could not post your score. Try again.';}};
-  }else box.innerHTML=head+'<div class="lbt"></div>';
+    f.onsubmit=async ev=>{ev.preventDefault();const er=f.querySelector('.err'),btn=f.querySelector('button[type=submit]');er.textContent='';btn.disabled=true;
+      try{const r=await doCreate(f.querySelector('input').value);const res=await API.submit(board,opts.entry);after(res,r.code);}
+      catch(e){btn.disabled=false;er.textContent=e.message&&/^Use 2|^Please pick/.test(e.message)?e.message:errMsg(e);}};
+  }else{
+    box.innerHTML=head+(opts.fresh?codeCardHTML(opts.fresh,true):'')+(opts.posted?`<p class="earned">+${opts.posted.points} Caddy Cup points <span class="muted small">for ${placeStr(opts.posted.rank)} of ${opts.posted.field} so far. Points can change until the board closes.</span></p>`:'')+'<div class="lbt"></div>';
+  }
   loadBoard(box.querySelector('.lbt'),board,opts);
 }
 async function loadBoard(el,board,opts){
   el.innerHTML='<p class="muted">Loading leaderboard...</p>';
-  try{const rows=await BOARD.top(board);if(!rows.length){el.innerHTML='<p class="muted">No scores yet. Be the first.</p>';return;}
+  try{const rows=await API.board(board);if(!rows.length){el.innerHTML='<p class="muted">No scores yet. Be the first.</p>';return;}
     const you=rows.find(r=>r.you),tot=rows[0].total,list=rows.slice(0,25);if(you&&you.rank>25)list.push(you);
-    el.innerHTML=`${you?`<p class="lbyou">You are <b>${you.rank===1?'1st':'#'+you.rank}</b> of ${tot}${tot>1?`, better than ${Math.round(100*(tot-you.rank)/(tot-1))}% of players`:''}.</p>`:''}
-    <div class="tbl"><table class="lb"><thead><tr><th>#</th><th>Player</th><th>${esc(opts.scoreLabel||'Score')}</th><th>Rating</th></tr></thead><tbody>
-    ${list.map(r=>`<tr class="${r.you?'you':''}"><td>${r.rank}</td><td>${esc(r.name)}</td><td class="n">${opts.fmt?opts.fmt(r.score):r.score}</td><td>${r.rating}</td></tr>`).join('')}</tbody></table></div>`;}
+    if(you){store.set(subKey(board),1);const pb=el.parentNode&&el.parentNode.querySelector('.postbox');if(pb)pb.outerHTML='<p class="muted small">Your ranked score for this board is already posted. This one counts as practice.</p>';}
+    el.innerHTML=`${you?`<p class="lbyou">You are <b>${ord(you.rank)}</b> of ${tot}${tot>2&&you.rank<tot?`, ahead of ${Math.round(100*(tot-you.rank)/(tot-1))}% of players`:''}.</p>`:''}
+    <div class="tbl"><table class="lb"><thead><tr><th>#</th><th>Player</th><th>${esc(opts.scoreLabel||'Score')}</th><th>Pts</th></tr></thead><tbody>
+    ${list.map(r=>`<tr class="${r.you?'you':''}"><td>${r.rank}</td><td>${esc(r.name)}</td><td class="n">${opts.fmt?opts.fmt(r.score):r.score}</td><td>${r.points!=null?r.points:''}</td></tr>`).join('')}</tbody></table></div>`;}
   catch(e){el.innerHTML='<p class="muted">The leaderboard is unavailable right now.</p>';}
 }
 function renderBoardScreen(kind){
   G=null;const daily=kind==='daily';
   $app.innerHTML=`<section class="end"><div><span class="kicker">${daily?`Daily #${dayNo}`:esc(PERIOD.label+' · '+PERIOD.when)}</span><h1>${esc(daily?todayMoment.title:weeklyRound.title)}</h1></div>
-    ${lbHTML('lbs')}<div class="cta"><button class="btn primary" data-act="home">Back to challenges</button>${daily?'':`<button class="btn" data-act="round" data-r="${weeklyRound.id}">Practice round</button>`}</div></section>`;
+    ${lbHTML('lbs')}<div class="cta"><button class="btn primary" data-act="home">Back to challenges</button><button class="btn" data-act="cup">Caddy Cup</button>${daily?'':`<button class="btn" data-act="round" data-r="${weeklyRound.id}">Practice round</button>`}</div></section>`;
   mountLB('lbs',daily?'daily:'+dateKey:PERIOD.board,{title:'Leaderboard',scoreLabel:daily?'Strokes':'To par',fmt:daily?null:fmtTP});
   window.scrollTo({top:0});
 }
+
+/* ---- Caddy Cup ---- */
+const CUP_RULES=`<details class="howpts"><summary>How points work</summary><ul>
+  <li><b>Daily:</b> 10 points for posting, up to 90 more for how much of the field you beat, plus 50, 30 or 20 for finishing 1st, 2nd or 3rd.</li>
+  <li><b>Weekly 18:</b> worth three times a daily, like a major.</li>
+  <li>Points update live and lock when the day or week ends. Practice rounds don't count.</li></ul></details>`;
+function cupCardHTML(){return `<article class="cupcard" id="cupcard"><div class="cuphead"><span class="kicker">Caddy Cup</span><button class="btn sm" data-act="cup">Standings</button></div><div class="cupbody"><p class="muted">Loading standings...</p></div></article>`;}
+async function fillCupCard(){
+  const el=document.querySelector('#cupcard .cupbody');if(!el)return;
+  try{const rows=await API.cup(5),you=rows.find(r=>r.you),pr=profile(),top=rows.filter(r=>r.rank<=3);
+    if(!document.body.contains(el))return;
+    el.innerHTML=`<h2>${esc((rows[0]&&rows[0].season)||SEASON_LOCAL.name)} standings</h2>
+      ${you?`<p class="cupyou">You are <b>${placeStr(you.rank,rows.filter(r=>r.rank===you.rank).length>1)}</b> of ${you.total} with <b>${you.points}</b> points.</p>`:pr?`<p class="cupyou">Post a ranked daily or weekly score to get on the board, ${esc(pr.name)}.</p>`:`<p class="cupyou">Every ranked daily and weekly round earns points. Create a profile to get on the board.</p>`}
+      ${top.length?`<ol class="cuptop">${top.map(r=>`<li class="${r.you?'you':''}"><span class="cr">${r.rank}</span><span class="cn">${esc(r.name)}</span><span class="cp">${r.points} pts</span></li>`).join('')}</ol>`:'<p class="muted small">No points yet this season. The first ranked round takes the lead.</p>'}
+      ${pr?'':`<div class="cta"><button class="btn primary" data-act="profile">Create profile</button></div>`}`;}
+  catch(e){el.innerHTML='<p class="muted">Standings are unavailable right now.</p>';}
+}
+async function renderCup(){
+  G=null;window.scrollTo({top:0});
+  $app.innerHTML=`<section class="end"><div><span class="kicker">Season standings</span><h1>Caddy Cup</h1></div>${previewNote()}${CUP_RULES}<div id="cupt"><p class="muted">Loading standings...</p></div>
+    <div class="cta"><button class="btn primary" data-act="home">Back to challenges</button><button class="btn" data-act="profile">${profile()?'Your profile':'Create profile'}</button></div></section>`;
+  const el=document.getElementById('cupt');
+  try{const rows=await API.cup(200);if(!el.isConnected)return;
+    if(!rows.length){el.innerHTML='<p class="muted">No points yet this season. Post a ranked daily or weekly score to take the lead.</p>';return;}
+    const r0=rows[0],ends=r0.ends?new Date(r0.ends+'T12:00:00Z').toLocaleDateString(undefined,{month:'long',day:'numeric',timeZone:'UTC'}):'';
+    el.innerHTML=`<p class="muted">${esc(r0.season||'')}${ends?' · runs through '+esc(ends):''} · ${r0.total} player${r0.total===1?'':'s'}</p>
+      <div class="tbl"><table class="lb cup"><thead><tr><th>#</th><th>Player</th><th>Points</th><th>Events</th><th>Wins</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr class="${r.you?'you':''}"><td>${r.rank}</td><td>${esc(r.name)}</td><td class="n">${r.points}</td><td>${r.events}</td><td>${r.wins}</td></tr>`).join('')}</tbody></table></div>`;}
+  catch(e){el.innerHTML='<p class="muted">Standings are unavailable right now.</p>';}
+}
+
+/* ---- Profile ---- */
+async function renderProfile(fresh){
+  G=null;window.scrollTo({top:0});const pr=profile();
+  if(!pr){
+    $app.innerHTML=`<section class="end prof"><div><span class="kicker">Your profile</span><h1>Make it yours</h1></div>
+      <p>Pick a name for the leaderboards and the Caddy Cup. No email needed. You'll get a player code that signs you in on any device.</p>${previewNote()}
+      <form class="nameform" id="createF" novalidate><label for="pfName">Create a profile</label><div class="row"><input id="pfName" maxlength="16" autocomplete="nickname" placeholder="Your name"><button class="btn primary" type="submit">Create profile</button></div><p class="err" aria-live="polite"></p></form>
+      <form class="nameform" id="loginF" novalidate><label for="pfCode">Already have a player code?</label><div class="row"><input id="pfCode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CC-XXXX-XXXX-XXXX-XXXX"><button class="btn" type="submit">Sign in</button></div><p class="err" aria-live="polite"></p></form>
+      <div class="cta"><button class="btn" data-act="home">Back to challenges</button></div></section>`;
+    const cf=document.getElementById('createF'),lf=document.getElementById('loginF');
+    cf.onsubmit=async ev=>{ev.preventDefault();const er=cf.querySelector('.err'),b=cf.querySelector('button');er.textContent='';b.disabled=true;
+      try{const r=await doCreate(cf.querySelector('input').value);renderProfile(r.code);}catch(e){b.disabled=false;er.textContent=e.message&&/^Use 2|^Please pick/.test(e.message)?e.message:errMsg(e);}};
+    lf.onsubmit=async ev=>{ev.preventDefault();const er=lf.querySelector('.err'),b=lf.querySelector('button');er.textContent='';b.disabled=true;
+      try{const r=await API.login(lf.querySelector('input').value);store.set('cc:profile',{id:r.player_id,name:r.name,code:r.code});renderProfile();}catch(e){b.disabled=false;er.textContent=errMsg(e);}};
+    return;
+  }
+  $app.innerHTML=`<section class="end prof"><div><span class="kicker">Your profile</span><h1>${esc(pr.name)}</h1></div>${previewNote()}
+    ${codeCardHTML(pr.code||'',!!fresh)}
+    <div id="pstats"><p class="muted">Loading your stats...</p></div>
+    <div class="cta"><button class="btn primary" data-act="cup">Caddy Cup standings</button><button class="btn" data-act="home">Back to challenges</button><button class="btn" id="signout">Sign out</button></div></section>`;
+  const so=document.getElementById('signout');so.onclick=()=>{if(!so.dataset.armed){so.dataset.armed=1;so.textContent='Tap again to sign out';setTimeout(()=>{if(so.isConnected){delete so.dataset.armed;so.textContent='Sign out';}},4000);return;}
+    store.set('cc:profile',null);store.set('cc:pid',newId());renderProfile();};
+  const el=document.getElementById('pstats');
+  try{const s=await API.stats();if(!el.isConnected)return;const vp=s.daily_vs_par==null?'-':(+s.daily_vs_par>0?'+':+s.daily_vs_par<0?'\u2212':'')+Math.abs(+s.daily_vs_par).toFixed(1);
+    el.innerHTML=`<div class="stats pstats">
+      <div class="stat"><span class="big">${s.cup_rank?'#'+s.cup_rank:'-'}</span><span>Caddy Cup${s.cup_field?' of '+s.cup_field:''}</span></div>
+      <div class="stat"><span class="big">${s.cup_points||0}</span><span>Points · ${esc(s.season||'')}</span></div>
+      <div class="stat"><span class="big">${(+s.dailies||0)+(+s.weeklies||0)}</span><span>Ranked rounds</span></div>
+      <div class="stat"><span class="big">${+s.wins||0}</span><span>Wins</span></div>
+      <div class="stat"><span class="big">${+s.top10||0}</span><span>Top 10s</span></div>
+      <div class="stat"><span class="big">${+s.beat_pro||0}</span><span>Beat the pro</span></div>
+      <div class="stat"><span class="big">${vp}</span><span>Daily avg vs par</span></div>
+      <div class="stat"><span class="big">${s.best_weekly==null?'-':fmtTP(+s.best_weekly)}</span><span>Best weekly 18</span></div></div>
+      <h3>Recent results</h3>${(s.recent||[]).length?`<div class="tbl"><table class="lb"><thead><tr><th>Date</th><th>Event</th><th>Score</th><th>Finish</th><th>Pts</th></tr></thead><tbody>
+      ${s.recent.map(r=>`<tr><td>${new Date(r.bdate+'T12:00:00Z').toLocaleDateString(undefined,{month:'short',day:'numeric',timeZone:'UTC'})}</td><td>${r.kind==='daily'?'Daily':'Weekly 18'}</td><td class="n">${r.kind==='daily'?r.score:fmtTP(+r.score)}</td><td>${ord(+r.rank)} of ${r.field}</td><td>${r.points}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">No ranked rounds yet. Play the daily or the weekly 18 and post your score.</p>'}`;}
+  catch(e){el.innerHTML=`<p class="muted">${LB_LIVE&&/no profile/.test(String(e.message))?'This profile was not found on the server. Sign out and sign in with your player code.':'Your stats are unavailable right now.'}</p>`;}
+}
+
 function weeklyCardHTML(){
   const r=weeklyRound,st=store.get(WKEY),sc=st&&st.done?st.scores:st&&st.round?st.round.scores:[],done=st&&st.done,n=sc.length;
   let tp=r.startToPar;for(let i=0;i<n;i++)tp+=sc[i]-r.holes[i].par;
@@ -1888,6 +2042,7 @@ function renderIntro(){
   <section class="playnow">
     <h2 class="sr-only">Play now</h2>
     <div class="pgrid">${dailyCardHTML()}${weeklyCardHTML()}</div>
+    ${cupCardHTML()}
     <details class="howbox"><summary>How it works</summary><div class="how">
         <h3>How it works</h3>
         <ol>
@@ -1908,6 +2063,7 @@ function renderIntro(){
     </details>`).join('')}
   </section>`;
   bindSections(m,done);
+  fillCupCard();
 }
 const SECTIONS=[
   {id:'wins',title:'Win it like they did',desc:'Single-hole moments that won majors.',count:()=>MOMENTS.filter(x=>x.role!=='runner-up'&&x.role!=='movie').length,
@@ -2167,7 +2323,7 @@ function renderEnd(){
       <div class="cta"><button class="btn" id="copy">Copy</button><span class="muted" id="copied" aria-live="polite"></span></div></div>
     <div class="cta"><button class="btn primary" data-act="practice" data-m="${m.id}">Play it again</button><button class="btn" data-act="home">All challenges</button></div>
   </section>`;
-  if(G.daily)mountLB('lbd','daily:'+dateKey,{title:`Daily #${dayNo} leaderboard`,scoreLabel:'Strokes',entry:{score:you,rating:G.rating,detail:{calls:G.calls}}});
+  if(G.daily)mountLB('lbd','daily:'+dateKey,{title:`Daily #${dayNo} leaderboard`,scoreLabel:'Strokes',entry:{score:you,rating:G.rating,detail:{calls:G.calls,par:m.par,beat:you<pro}}});
   document.getElementById('copy').onclick=()=>{const t=shareTxt;const done=()=>document.getElementById('copied').textContent='Copied.';
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,()=>selectShare());}else selectShare();};
 }
@@ -2828,7 +2984,7 @@ function renderRoundEnd(){
     <div class="share"><h3>Share your round</h3><pre id="sharetxt">${esc(share)}</pre><div class="cta"><button class="btn" id="copy">Copy</button><span class="muted" id="copied" aria-live="polite"></span></div></div>
     <div class="cta"><button class="btn primary" data-act="round" data-r="${r.id}">${r.weekly?'Practice round':'Play it again'}</button><button class="btn" data-act="home">All challenges</button></div>
   </section>`;
-  if(ROUND.ranked){store.set(WKEY,{done:true,tp:you.tp,rating,calls,scores:ROUND.scores.slice()});mountLB('lbw',PERIOD.board,{title:`${PERIOD.label} leaderboard`,scoreLabel:'To par',fmt:fmtTP,entry:{score:you.tp,rating,detail:{scores:ROUND.scores}}});}
+  if(ROUND.ranked){store.set(WKEY,{done:true,tp:you.tp,rating,calls,scores:ROUND.scores.slice()});mountLB('lbw',PERIOD.board,{title:`${PERIOD.label} leaderboard`,scoreLabel:'To par',fmt:fmtTP,entry:{score:you.tp,rating,detail:{scores:ROUND.scores,beat:you.tp<realTP}}});}
   document.getElementById('copy').onclick=()=>{const done=()=>document.getElementById('copied').textContent='Copied.';if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(share).then(done,()=>selectShare());else selectShare();};
 }
 function roundCardHTML(r){return `<button class="mcard" data-act="round" data-r="${r.id}"><span class="badge">${esc(r.short)} · ${r.year}</span><span class="t">${esc(r.title)}</span><span class="s">${esc(r.event)} · ${esc(r.span)}</span><span class="beat">${r.cta?esc(r.cta):`Start ${fmtTP(r.startToPar)}. Chase the lead.`}</span></button>`;}
@@ -2864,8 +3020,11 @@ $app.addEventListener('click',e=>{
   else if(act==='weekly'){cancelAnim();startWeekly();}
   else if(act==='weeklyboard')renderBoardScreen('weekly');
   else if(act==='dailyboard')renderBoardScreen('daily');
+  else if(act==='profile'){cancelAnim();renderProfile();}
+  else if(act==='cup'){cancelAnim();renderCup();}
 });
 document.getElementById('settingsBtn').onclick=openSettings;
+document.getElementById('profileBtn').onclick=()=>{cancelAnim&&cancelAnim();hideTip();renderProfile();};
 document.getElementById('replayTips').onclick=()=>{store.set('cc:tips',{});const d=document.getElementById('settings');try{d.close();}catch(e){d.removeAttribute('open');}setTimeout(runTips,50);};
 document.getElementById('home').onclick=()=>{cancelAnim();ROUND=null;renderIntro();window.scrollTo({top:0});};
 
