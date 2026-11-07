@@ -32,9 +32,9 @@ Go to app.netlify.com/drop and drag this whole folder onto the page. Done.
 1. Buy the domain (Cloudflare Registrar or Namecheap, about $10 to $15 a year for a .com).
 2. In Vercel: Project > Settings > Domains > add `yourdomain.com` and `www.yourdomain.com`.
 3. Vercel shows one or two DNS records. Add them at your registrar. HTTPS turns on automatically.
-4. If your domain is not `clutchcaddie.com`, find and replace `clutchcaddie.com` in `index.html`,
+4. If your domain is not `clutchcaddy.com`, find and replace `clutchcaddy.com` in `index.html`,
    `robots.txt`, `sitemap.xml`, `privacy.html` and `terms.html`. Also replace the contact address
-   `hello@clutchcaddie.com` with a real inbox.
+   `hello@clutchcaddy.com` with a real inbox.
 
 ## 3. Turn on the live leaderboards (Supabase, free to start)
 
