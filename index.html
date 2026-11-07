@@ -491,6 +491,12 @@ dialog#settings h2{margin:0 0 10px}
 .tip .btn.sm{background:color-mix(in srgb,var(--paper) 14%,transparent);color:var(--paper);box-shadow:none}
 .tip .btn.primary.sm{background:var(--turf);color:#fff;padding:8px 14px;font-size:14px}
 .lienote{margin:0;font-size:14px;font-weight:600;color:var(--g-cost)}
+
+/* shot shape dropdown */
+.tgtrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.shapesel{appearance:none;-webkit-appearance:none;font:inherit;font-weight:700;font-size:15px;color:var(--ink);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23889488' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center/11px 8px;border:0;box-shadow:inset 0 0 0 1px var(--line);border-radius:999px;padding:8px 34px 8px 14px;cursor:pointer}
+.shapesel:focus-visible{outline:2px solid var(--turf);outline-offset:1px}
+@media (max-width:820px){.ab-main .shapesel{font-size:13px;padding:5px 28px 5px 10px;background-position:right 10px center}}
 /* bottom bars */
 @media (max-width:820px){
   .aimbar{border-top:0;border-radius:22px 22px 0 0;background:color-mix(in srgb,var(--surface) 97%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(16px);box-shadow:0 -6px 30px rgba(0,0,0,.12)}
@@ -512,7 +518,6 @@ dialog#settings h2{margin:0 0 10px}
   </header>
   <dialog id="settings" aria-labelledby="setTitle"><form method="dialog">
     <h2 id="setTitle">Settings</h2>
-    <label class="setrow"><span><b>Shot shapes</b><small>Choose a draw or a fade on full shots. Draws fly a little longer and roll out. Fades come up a little shorter and hold greens.</small></span><input type="checkbox" id="optShapes" class="switch"></label>
     <div class="setrow"><span><b>Tips</b><small>Show the first-time walkthrough again.</small></span><button type="button" class="btn sm" id="replayTips">Show again</button></div>
     <div class="cta"><button class="btn primary" value="close">Done</button></div>
   </form></dialog>
@@ -1739,14 +1744,15 @@ function dailyCardHTML(){
 
 /* ================= SHOT SHAPES (optional) ================= */
 const SHAPES={draw:{label:'Draw',lng:d=>.04*d+3,L:1.12,sign:1},straight:{label:'Straight',lng:()=>0,L:1,sign:0},fade:{label:'Fade',lng:d=>-.03*d,L:.82,sign:-1}};
-const shapesOn=()=>store.get('cc:shapes')===true;
+const shapesOn=()=>true;
 const shapeKeys=()=>shapesOn()?['draw','straight','fade']:['straight'];
 function shapeAdj(shape,distYds){const S=SHAPES[shape]||SHAPES.straight;return{shift:S.lng(distYds),Lk:S.L};}
 function setShape(k){if(!G||!G.aim||!G.aim.club||!SHAPES[k])return;G.aim.shape=k;
-  document.querySelectorAll('[data-shape]').forEach(b=>{const on=b.dataset.shape===k;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});
+  document.querySelectorAll('.shapesel').forEach(s=>{s.value=k;});
   setTarget(G.aim.t);}
-function shapeCtlHTML(){if(!shapesOn()||!G.aim.club)return'';const cur=G.aim.shape||'straight';
-  return `<div class="seg" role="group" aria-label="Shot shape">${['draw','straight','fade'].map(k=>`<button class="segbtn ${cur===k?'on':''}" data-shape="${k}" aria-pressed="${cur===k}">${SHAPES[k].label}</button>`).join('')}</div>`;}
+function shapeCtlHTML(){if(!G.aim.club)return'';const cur=G.aim.shape||'straight';
+  return `<select class="shapesel" aria-label="Shot shape">${['straight','draw','fade'].map(k=>`<option value="${k}"${cur===k?' selected':''}>${SHAPES[k].label}</option>`).join('')}</select>`;}
+document.addEventListener('change',e=>{if(e.target.classList&&e.target.classList.contains('shapesel'))setShape(e.target.value);});
 
 /* ================= HOLE SUMMARY MAP: your shots vs the pro's (approximate) ================= */
 function strokesOf(m){return m.real!=null?m.real:(m.pro&&m.pro.score)||0;}
@@ -1834,7 +1840,7 @@ function summaryHTML(){
 }
 
 /* ================= SETTINGS ================= */
-function openSettings(){const d=document.getElementById('settings');if(!d)return;document.getElementById('optShapes').checked=shapesOn();try{d.showModal();}catch(e){d.setAttribute('open','');}}
+function openSettings(){const d=document.getElementById('settings');if(!d)return;try{d.showModal();}catch(e){d.setAttribute('open','');}}
 
 /* ================= FIRST-TIME WALKTHROUGH ================= */
 const TIPS={
@@ -2328,10 +2334,10 @@ function bestPlay(ball,lie,fromId,s){
     const mn=clubMin(club);if(mn>dPin+20)continue;
     const rs=new Set([club.max,Math.round(mn+(club.max-mn)*.5),mn]);if(dPin<=club.max&&dPin>=mn)rs.add(Math.round(dPin));if(club.max<140)for(let r=30;r<club.max;r+=20)rs.add(r);
     for(const r of rs){if(r>dPin+20||r<15)continue;
-      for(let a=-36;a<=36;a+=4){const ang=base+a*Math.PI/180,t={x:ball.x+Math.cos(ang)*r*p,y:ball.y+Math.sin(ang)*r*p};for(const shape of shapeKeys())cands.push({club,t,shape,ev:evPlay(ball,t,club,lie,fromId,40,shape)});}}
+      for(let a=-36;a<=36;a+=4){const ang=base+a*Math.PI/180,t={x:ball.x+Math.cos(ang)*r*p,y:ball.y+Math.sin(ang)*r*p};cands.push({club,t,shape:'straight',ev:evPlay(ball,t,club,lie,fromId,40,'straight')});}}
   }
   cands.sort((a,b)=>a.ev-b.ev);
-  const top=cands.slice(0,8).map(c=>({...c,ev:evPlay(ball,c.t,c.club,lie,fromId,240,c.shape)}));top.sort((a,b)=>a.ev-b.ev);return top[0]||null;
+  const top=cands.slice(0,8).flatMap(c=>shapeKeys().map(shape=>({...c,shape,ev:evPlay(ball,c.t,c.club,lie,fromId,240,shape)})));top.sort((a,b)=>a.ev-b.ev);return top[0]||null;
 }
 function defaultTarget(club,ball){
   const p=ppyOf(G.m),pin=pinPt(),dPin=Math.hypot(pin.x-ball.x,pin.y-ball.y),maxPx=club.max*p;
@@ -2373,17 +2379,16 @@ function renderFull(){
       ${res?'':`<div class="pcontrols">
         <div class="ctl"><span class="lbl">Club</span>
           <div class="bag" role="group" aria-label="Choose a club">${bag.map(b=>`<button class="clubbtn ${G.aim.club&&b.i===G.aim.club.i?'on':''}" data-club="${b.i}" aria-pressed="${!!(G.aim.club&&b.i===G.aim.club.i)}">${esc(b.name)}<small>${b.max} yds</small></button>`).join('')}</div></div>
-        ${!G.aim.club?`<div class="ctl"><span class="lbl">Target</span><span class="pickprompt">Pick a club to see your aim point and where the shot can land.</span></div>`:`<div class="ctl"><span class="lbl">Target</span><span class="tgt-out" id="tgtOut">${tgtText(ball,G.aim.t)}</span>
+        ${!G.aim.club?`<div class="ctl"><span class="lbl">Target</span><span class="pickprompt">Pick a club to see your aim point and where the shot can land.</span></div>`:`<div class="ctl"><span class="lbl">Target and shape</span><div class="tgtrow"><span class="tgt-out" id="tgtOut">${tgtText(ball,G.aim.t)}</span>${shapeCtlHTML()}</div>
           <div class="nudges" role="group" aria-label="Fine-tune target">
             <button class="btn sm" data-nudge="-2,0" aria-label="Aim 2 yards left">&#9664; Left</button><button class="btn sm" data-nudge="2,0" aria-label="Aim 2 yards right">Right &#9654;</button>
             <button class="btn sm" data-nudge="0,-3" aria-label="3 yards shorter">&minus; Shorter</button><button class="btn sm" data-nudge="0,3" aria-label="3 yards longer">Longer +</button></div>
-          <span class="hint">Pick a club, then drag anywhere on the hole to aim. Each club covers its own range of distances. The oval shows where about 86% of shots land, tilted like a right-hander's misses: left runs long, right comes up short.</span></div>
-        ${shapesOn()?`<div class="ctl"><span class="lbl">Shape</span>${shapeCtlHTML()}<span class="hint">Draws fly a little longer and roll out. Fades come up a little shorter and hold greens.</span></div>`:''}
+          <span class="hint">Pick a club, then drag anywhere on the hole to aim. Each club covers its own range of distances. The oval shows where about 86% of shots land, tilted like a right-hander's misses: left runs long, right comes up short. A draw flies a little longer and rolls out. A fade comes up a little shorter and holds greens.</span></div>
         <div class="ctl"><span class="lbl">Where it lands</span><div id="odds">${oddsHTML(oddsFor(ball,G.aim.t,G.aim.club,lie,shapesOn()?G.aim.shape:'straight'))}</div></div>
         <div><button class="btn primary" id="hit">Hit it</button></div>`}
       </div>
-      ${!G.aim.club?`<div class="aimbar pick" role="group" aria-label="Pick a club"><div class="ab-pick"><span class="ab-lbl">Pick a club</span><div class="bag ab-bag">${bag.map(b=>`<button class="clubbtn" data-club="${b.i}">${esc(b.name)}<small>${b.max} yds</small></button>`).join('')}</div></div></div>`:`<div class="aimbar ${shapesOn()?'withshape':''}" role="group" aria-label="Aim summary">${shapesOn()?`<div class="ab-shape">${shapeCtlHTML()}</div>`:''}
-        <div class="ab-main"><button class="btn sm" data-clubstep="-1" aria-label="Longer club">&#9664;</button><b id="abClub">${esc(G.aim.club.name)}</b><button class="btn sm" data-clubstep="1" aria-label="Shorter club">&#9654;</button><span id="abDist" class="ab-dist">${tgtText(ball,G.aim.t)}</span></div>
+      ${!G.aim.club?`<div class="aimbar pick" role="group" aria-label="Pick a club"><div class="ab-pick"><span class="ab-lbl">Pick a club</span><div class="bag ab-bag">${bag.map(b=>`<button class="clubbtn" data-club="${b.i}">${esc(b.name)}<small>${b.max} yds</small></button>`).join('')}</div></div></div>`:`<div class="aimbar" role="group" aria-label="Aim summary">
+        <div class="ab-main"><button class="btn sm" data-clubstep="-1" aria-label="Longer club">&#9664;</button><b id="abClub">${esc(G.aim.club.name)}</b><button class="btn sm" data-clubstep="1" aria-label="Shorter club">&#9654;</button><span id="abDist" class="ab-dist">${tgtText(ball,G.aim.t)}</span>${shapeCtlHTML()}</div>
         <div class="ab-odds" id="abOdds">${oddsMini(oddsFor(ball,G.aim.t,G.aim.club,lie,shapesOn()?G.aim.shape:'straight'))}</div>
         <button class="btn primary" data-hit="1">Hit it</button>
       </div>`}`}
@@ -2862,7 +2867,6 @@ $app.addEventListener('click',e=>{
   else if(act==='dailyboard')renderBoardScreen('daily');
 });
 document.getElementById('settingsBtn').onclick=openSettings;
-document.getElementById('optShapes').onchange=e=>{store.set('cc:shapes',e.target.checked);if(G&&G.phase==='choose'&&!G.green){if(G.aim)G.aim.shape='straight';renderPlay();}};
 document.getElementById('replayTips').onclick=()=>{store.set('cc:tips',{});const d=document.getElementById('settings');try{d.close();}catch(e){d.removeAttribute('open');}setTimeout(runTips,50);};
 document.getElementById('home').onclick=()=>{cancelAnim();ROUND=null;renderIntro();window.scrollTo({top:0});};
 
