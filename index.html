@@ -419,6 +419,20 @@ footer{border-top:0;font-size:12px}
 .nameform .err{margin:0;color:var(--g-miss);font-size:13px;min-height:1em}
 .lbyou{margin:0;font-size:16px}
 @media (max-width:820px){.pgrid{grid-template-columns:1fr}.pcard.dl{grid-template-columns:minmax(0,1fr) 96px;gap:12px}.pthumb svg{width:96px}.wc{font-size:13px}}
+
+/* collapsible challenge sections */
+details.sec{background:var(--card);border-radius:20px;padding:4px 6px}
+details.sec+details.sec{margin-top:-2px}
+details.sec summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto auto;grid-template-areas:"t n c" "d d d";align-items:center;gap:2px 10px;padding:14px 14px}
+details.sec summary::-webkit-details-marker{display:none}
+.sec-t{grid-area:t;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.01em}
+.sec-n{grid-area:n;background:var(--turf-soft);color:var(--turf);font-weight:700;font-size:13px;border-radius:999px;padding:3px 10px}
+.sec-d{grid-area:d;color:var(--muted);font-size:14px}
+.sec-c{grid-area:c;width:10px;height:10px;border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:rotate(45deg) translateY(-3px);transition:transform .2s}
+details.sec[open] .sec-c{transform:rotate(225deg) translate(-2px,-2px)}
+details.sec .mlist{padding:4px 8px 14px}
+details.sec .mcard{background:var(--surface)}
+details.sec summary:focus-visible{outline:2px solid var(--turf);border-radius:16px}
 /* bottom bars */
 @media (max-width:820px){
   .aimbar{border-top:0;border-radius:22px 22px 0 0;background:color-mix(in srgb,var(--surface) 97%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(16px);box-shadow:0 -6px 30px rgba(0,0,0,.12)}
@@ -1677,25 +1691,29 @@ function renderIntro(){
   <section class="moments">
     <h2>All challenges</h2>
     <p class="muted">Play any of these as often as you like. Only the daily and the weekly round count for the leaderboards.</p>
-    <h3>Win it like they did</h3>
-    <div class="mlist">
-      ${MOMENTS.filter(x=>x.role!=='runner-up'&&x.role!=='movie').map(x=>mcardHTML(x,m,done)).join('')}
-    </div>
-    <h3 style="margin-top:14px">Chase the lead</h3>
-    <p class="muted">Multi-hole stretches. Start where they started, with the real leaderboard around you.</p>
-    <div class="mlist">${ROUNDS.filter(r=>!r.weekly).map(roundCardHTML).join('')}</div>
-    <h3 style="margin-top:14px">Do better than them</h3>
-    <p class="muted">Step into the spot where a major slipped away. Beat their score.</p>
-    <div class="mlist">
-      ${MOMENTS.filter(x=>x.role==='runner-up').map(x=>mcardHTML(x,m,done)).join('')}
-      ${COMING.map(c=>`<div class="mcard soon"><span class="badge">${esc(c.s)}</span><span class="t">${esc(c.t)}</span></div>`).join('')}
-    </div>
-    <h3 style="margin-top:14px">Movie moments</h3>
-    <p class="muted">The most famous finishes golf never actually had.</p>
-    <div class="mlist">
-      ${MOMENTS.filter(x=>x.role==='movie').map(x=>mcardHTML(x,m,done)).join('')}
-    </div>
+    ${SECTIONS.map(s=>`<details class="sec" data-sec="${s.id}"${secOpen(s.id)?' open':''}>
+      <summary><span class="sec-t">${esc(s.title)}</span><span class="sec-n">${s.count()}</span><span class="sec-d">${esc(s.desc)}</span><span class="sec-c" aria-hidden="true"></span></summary>
+      <div class="mlist">${secOpen(s.id)?s.cards(m,done):''}</div>
+    </details>`).join('')}
   </section>`;
+  bindSections(m,done);
+}
+const SECTIONS=[
+  {id:'wins',title:'Win it like they did',desc:'Single-hole moments that won majors.',count:()=>MOMENTS.filter(x=>x.role!=='runner-up'&&x.role!=='movie').length,
+    cards:(m,done)=>MOMENTS.filter(x=>x.role!=='runner-up'&&x.role!=='movie').map(x=>mcardHTML(x,m,done)).join('')},
+  {id:'chase',title:'Chase the lead',desc:'Multi-hole stretches with the real leaderboard around you.',count:()=>ROUNDS.filter(r=>!r.weekly).length,
+    cards:()=>ROUNDS.filter(r=>!r.weekly).map(roundCardHTML).join('')},
+  {id:'better',title:'Do better than them',desc:'Step into the spot where a major slipped away.',count:()=>MOMENTS.filter(x=>x.role==='runner-up').length,
+    cards:(m,done)=>MOMENTS.filter(x=>x.role==='runner-up').map(x=>mcardHTML(x,m,done)).join('')+COMING.map(c=>`<div class="mcard soon"><span class="badge">${esc(c.s)}</span><span class="t">${esc(c.t)}</span></div>`).join('')},
+  {id:'movies',title:'Movie moments',desc:'The most famous finishes golf never actually had.',count:()=>MOMENTS.filter(x=>x.role==='movie').length,
+    cards:(m,done)=>MOMENTS.filter(x=>x.role==='movie').map(x=>mcardHTML(x,m,done)).join('')}
+];
+const secOpen=id=>!!(store.get('cc:open')||{})[id];
+function bindSections(m,done){
+  document.querySelectorAll('details.sec').forEach(d=>d.addEventListener('toggle',()=>{
+    const id=d.dataset.sec,s=SECTIONS.find(x=>x.id===id),list=d.querySelector('.mlist');
+    if(d.open&&!list.childElementCount)list.innerHTML=s.cards(m,done);
+    const o=store.get('cc:open')||{};o[id]=d.open;store.set('cc:open',o);}));
 }
 
 function mcardHTML(x,m,done){const ru=x.role==='runner-up';const mv=x.role==='movie';
