@@ -4,6 +4,6 @@
    period: 'week' for a weekly 18-hole challenge (resets Monday 00:00 ET) or 'month' (resets on the 1st). */
 window.CC_CONFIG = {
   supabaseUrl: '',
-  supabaseAnonKey: '',
+  supabaseAnonKey: '',   // the publishable key (sb_publishable_...) or the legacy anon key both work
   period: 'week'
 };

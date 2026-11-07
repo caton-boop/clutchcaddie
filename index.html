@@ -1663,7 +1663,7 @@ const BADWORDS=['fuck','shit','cunt','nigg','fagg','bitch','pussy','whore','slut
 function cleanName(s){s=String(s||'').replace(/\s+/g,' ').trim();
   if(!/^[A-Za-z0-9 ._'-]{2,16}$/.test(s))return{err:'Use 2 to 16 letters, numbers, spaces, dots, dashes or apostrophes.'};
   const l=s.toLowerCase().replace(/[0134578]/g,c=>'oieastb'['0134578'.indexOf(c)]).replace(/[^a-z]/g,'');if(BADWORDS.some(w=>l.includes(w)))return{err:'Please pick a different name.'};return{name:s};}
-const lbHeaders=()=>({apikey:CC.supabaseAnonKey,Authorization:'Bearer '+CC.supabaseAnonKey,'Content-Type':'application/json'});
+const lbHeaders=()=>{const k=CC.supabaseAnonKey,o={apikey:k,'Content-Type':'application/json'};if(/^eyJ/.test(k))o.Authorization='Bearer '+k;return o;};
 const BOARD={
   async submit(board,e){
     if(LB_LIVE){const r=await fetch(CC.supabaseUrl+'/rest/v1/rpc/submit_score',{method:'POST',headers:lbHeaders(),body:JSON.stringify({p_board:board,p_player:playerId,p_name:e.name,p_score:e.score,p_rating:e.rating,p_detail:e.detail||null})});
@@ -1748,11 +1748,10 @@ const shapesOn=()=>true;
 const shapeKeys=()=>shapesOn()?['draw','straight','fade']:['straight'];
 function shapeAdj(shape,distYds){const S=SHAPES[shape]||SHAPES.straight;return{shift:S.lng(distYds),Lk:S.L};}
 function setShape(k){if(!G||!G.aim||!G.aim.club||!SHAPES[k])return;G.aim.shape=k;
-  document.querySelectorAll('.shapesel').forEach(s=>{s.value=k;});
+  document.querySelectorAll('[data-shape]').forEach(b=>{const on=b.dataset.shape===k;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});
   setTarget(G.aim.t);}
 function shapeCtlHTML(){if(!G.aim.club)return'';const cur=G.aim.shape||'straight';
-  return `<select class="shapesel" aria-label="Shot shape">${['straight','draw','fade'].map(k=>`<option value="${k}"${cur===k?' selected':''}>${SHAPES[k].label}</option>`).join('')}</select>`;}
-document.addEventListener('change',e=>{if(e.target.classList&&e.target.classList.contains('shapesel'))setShape(e.target.value);});
+  return `<div class="seg" role="group" aria-label="Shot shape">${['draw','straight','fade'].map(k=>`<button class="segbtn ${cur===k?'on':''}" data-shape="${k}" aria-pressed="${cur===k}">${SHAPES[k].label}</button>`).join('')}</div>`;}
 
 /* ================= HOLE SUMMARY MAP: your shots vs the pro's (approximate) ================= */
 function strokesOf(m){return m.real!=null?m.real:(m.pro&&m.pro.score)||0;}
@@ -2387,8 +2386,8 @@ function renderFull(){
         <div class="ctl"><span class="lbl">Where it lands</span><div id="odds">${oddsHTML(oddsFor(ball,G.aim.t,G.aim.club,lie,shapesOn()?G.aim.shape:'straight'))}</div></div>
         <div><button class="btn primary" id="hit">Hit it</button></div>`}
       </div>
-      ${!G.aim.club?`<div class="aimbar pick" role="group" aria-label="Pick a club"><div class="ab-pick"><span class="ab-lbl">Pick a club</span><div class="bag ab-bag">${bag.map(b=>`<button class="clubbtn" data-club="${b.i}">${esc(b.name)}<small>${b.max} yds</small></button>`).join('')}</div></div></div>`:`<div class="aimbar" role="group" aria-label="Aim summary">
-        <div class="ab-main"><button class="btn sm" data-clubstep="-1" aria-label="Longer club">&#9664;</button><b id="abClub">${esc(G.aim.club.name)}</b><button class="btn sm" data-clubstep="1" aria-label="Shorter club">&#9654;</button><span id="abDist" class="ab-dist">${tgtText(ball,G.aim.t)}</span>${shapeCtlHTML()}</div>
+      ${!G.aim.club?`<div class="aimbar pick" role="group" aria-label="Pick a club"><div class="ab-pick"><span class="ab-lbl">Pick a club</span><div class="bag ab-bag">${bag.map(b=>`<button class="clubbtn" data-club="${b.i}">${esc(b.name)}<small>${b.max} yds</small></button>`).join('')}</div></div></div>`:`<div class="aimbar withshape" role="group" aria-label="Aim summary"><div class="ab-shape">${shapeCtlHTML()}</div>
+        <div class="ab-main"><button class="btn sm" data-clubstep="-1" aria-label="Longer club">&#9664;</button><b id="abClub">${esc(G.aim.club.name)}</b><button class="btn sm" data-clubstep="1" aria-label="Shorter club">&#9654;</button><span id="abDist" class="ab-dist">${tgtText(ball,G.aim.t)}</span></div>
         <div class="ab-odds" id="abOdds">${oddsMini(oddsFor(ball,G.aim.t,G.aim.club,lie,shapesOn()?G.aim.shape:'straight'))}</div>
         <button class="btn primary" data-hit="1">Hit it</button>
       </div>`}`}
