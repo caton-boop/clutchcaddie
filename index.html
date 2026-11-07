@@ -396,8 +396,10 @@ footer{border-top:0;font-size:12px}
 .pcard .pmeta{font-weight:600;color:var(--muted);font-size:14px}
 .pcard .pstat{font-size:15px}
 .pcard .cta{margin-top:auto;padding-top:4px}
-.pcard.dl{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:18px}
-.pcard.dl .pbody{display:flex;flex-direction:column;gap:10px;min-width:0}
+.pcard.dl{display:grid;grid-template-columns:minmax(0,1fr) 150px;grid-template-areas:"head thumb" "body thumb";grid-template-rows:auto 1fr;gap:10px 18px}
+.pcard.dl .phead{grid-area:head;display:flex;flex-direction:column;gap:10px;min-width:0}
+.pcard.dl .pbody{grid-area:body;display:flex;flex-direction:column;gap:10px;min-width:0}
+.pcard.dl .pthumb{grid-area:thumb}
 .pthumb{align-self:start}.pthumb svg{width:150px;height:auto;border-radius:14px;display:block}
 .pcard.wk{background:linear-gradient(160deg,var(--turf-soft),var(--card) 60%)}
 .small{font-size:12.5px}
@@ -418,7 +420,7 @@ footer{border-top:0;font-size:12px}
 .nameform input:focus{outline:2px solid var(--turf);outline-offset:1px}
 .nameform .err{margin:0;color:var(--g-miss);font-size:13px;min-height:1em}
 .lbyou{margin:0;font-size:16px}
-@media (max-width:820px){.pgrid{grid-template-columns:1fr}.pcard.dl{grid-template-columns:minmax(0,1fr) 96px;gap:12px}.pthumb svg{width:96px}.wc{font-size:13px}}
+@media (max-width:820px){.pgrid{grid-template-columns:1fr}.pcard.dl{grid-template-columns:minmax(0,1fr) 96px;grid-template-areas:"head thumb" "body body";grid-template-rows:auto auto;gap:12px}.pthumb svg{width:96px}.wc{font-size:13px}}
 
 /* collapsible challenge sections */
 details.sec{background:var(--card);border-radius:20px;padding:4px 6px}
@@ -1656,10 +1658,12 @@ function weeklyCardHTML(){
 function dailyCardHTML(){
   const m=todayMoment,done=store.get(SKEY);
   return `<article class="pcard dl">
-    <div class="pbody">
+    <div class="phead">
       <span class="kicker">Daily #${dayNo} · Today's moment</span>
       <h2>${esc(m.title)}</h2>
       <p class="pmeta">${esc(m.player)} · ${esc(m.event)} ${m.year} · ${esc(m.holeLine)}</p>
+    </div>
+    <div class="pbody">
       <p>${esc(m.stakes)}</p>
       ${m.vs&&m.vs.note?`<p class="muted">${esc(m.vs.note)}</p>`:''}
       ${done?`<p class="pstat">You made <b>${done.score}</b> (${relName(done.score,m.par).toLowerCase()}), clutch rating ${done.rating}.</p>`:''}
