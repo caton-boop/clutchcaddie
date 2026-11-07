@@ -1679,7 +1679,7 @@ function renderIntro(){
     <p class="muted">Play any of these as often as you like. Only the daily and the weekly round count for the leaderboards.</p>
     <h3>Win it like they did</h3>
     <div class="mlist">
-      ${MOMENTS.filter(x=>x.role!=='runner-up').map(x=>mcardHTML(x,m,done)).join('')}
+      ${MOMENTS.filter(x=>x.role!=='runner-up'&&x.role!=='movie').map(x=>mcardHTML(x,m,done)).join('')}
     </div>
     <h3 style="margin-top:14px">Chase the lead</h3>
     <p class="muted">Multi-hole stretches. Start where they started, with the real leaderboard around you.</p>
