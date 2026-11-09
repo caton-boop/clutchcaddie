@@ -24,6 +24,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Clutch Caddie">
 <script src="/config.js"></script>
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+<script defer src="/_vercel/insights/script.js"></script>
 <style>
 /* Layout: yardage-book page. Hole drawing on the left (top on phones), caddie decision panel beside it. */
 :root{
@@ -376,6 +378,14 @@ td.n{font-family:var(--display);font-weight:800}
 td .c{text-transform:none;letter-spacing:0;font-size:12px}
 table.lb tr.you td{background:var(--turf-soft)}
 .share pre{padding:14px;font-size:14px;border:0}
+.sharecard{display:grid;grid-template-columns:minmax(0,240px) 1fr;gap:18px;align-items:center}
+.shareimg{aspect-ratio:4/5;background:var(--card);border-radius:16px;display:grid;place-items:center;overflow:hidden;box-shadow:var(--shadow);padding:0}
+.shareimg img{width:100%;height:100%;object-fit:cover;display:block}.shareimg>span{padding:16px;text-align:center}
+.sharebtns{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+@media (max-width:560px){.sharecard{grid-template-columns:1fr}.shareimg{width:min(300px,100%);margin:0 auto}.sharebtns{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center}}
+.streak{margin:8px 0 0;font-weight:500}.streak.risk b{color:var(--g-cost)}.endstreak{font-size:17px;margin:0}
+.ycard{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--card);border-radius:20px;padding:16px 20px;margin:16px 0}
+.ycard .ytext{display:grid;gap:4px;min-width:0}.ycard b{font-size:17px}
 footer{border-top:0;font-size:12px}
 /* map + green */
 .a-text{font-family:var(--display);font-weight:700;fill:var(--pencil);opacity:.75}
@@ -463,6 +473,9 @@ dialog#settings h2{margin:0 0 10px}
 .seg{display:inline-flex;background:var(--surface);border-radius:999px;padding:3px;gap:2px;box-shadow:inset 0 0 0 1px var(--line)}
 .segbtn{border:0;background:none;border-radius:999px;padding:7px 14px;font:inherit;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer}
 .segbtn.on{background:var(--turf);color:var(--turf-ink)}
+.segbtn small{font-size:11px;font-weight:600;margin-left:5px;opacity:.75;font-variant-numeric:tabular-nums}.segbtn small:empty{display:none}
+.shapenote{margin:8px 0 0;font-size:14px;line-height:1.45;color:var(--ink)}.shapenote .muted{color:var(--muted)}.aimbar .shapenote{display:none}
+@media (max-width:820px){.aimbar .shapenote.short{display:block;grid-column:1/-1;margin:4px 2px 0;font-size:12px;line-height:1.3;text-align:center}}
 @media (max-width:820px){
   .aimbar.withshape{grid-template-areas:"shape shape" "main hit" "odds hit"}
   .ab-shape{grid-area:shape}.ab-shape .seg{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}.ab-shape .segbtn{padding:6px 0;font-size:13px}
@@ -1732,7 +1745,7 @@ const API={
     const me=pid(),mine=MOCK.results().filter(r=>r.pid===me),cup=(await API.cup(1)).find(x=>x.you)||{},d=mine.filter(r=>r.kind==='daily'),w=mine.filter(r=>r.kind!=='daily'),withPar=d.filter(r=>r.detail&&r.detail.par);
     return{name:(profile()||{}).name,season:SEASON_LOCAL.name,cup_rank:cup.rank||null,cup_points:cup.points||0,cup_field:cup.total||null,dailies:d.length,weeklies:w.length,
       wins:mine.filter(r=>r.rank===1).length,top10:mine.filter(r=>r.rank<=10).length,beat_pro:mine.filter(r=>r.detail&&r.detail.beat).length,
-      daily_vs_par:withPar.length?withPar.reduce((s,r)=>s+r.score-r.detail.par,0)/withPar.length:null,best_weekly:w.length?Math.min(...w.map(r=>r.score)):null,
+      daily_vs_par:withPar.length?withPar.reduce((s,r)=>s+r.score-r.detail.par,0)/withPar.length:null,best_weekly:w.length?Math.min(...w.map(r=>r.score)):null,days:d.map(r=>r.bdate),
       recent:mine.sort((a,b)=>b.bdate.localeCompare(a.bdate)).slice(0,14).map(r=>({board:r.board,kind:r.kind,bdate:r.bdate,score:r.score,rank:r.rank,field:r.field,points:r.points,par:r.detail&&r.detail.par}))};}
 };
 const previewNote=()=>LB_LIVE?'':'<p class="muted lbnote">Preview mode: profiles and scores are saved on this device only until the site is connected to its database.</p>';
@@ -1749,14 +1762,14 @@ document.addEventListener('click',e=>{
   if(c){const code=c.parentElement.querySelector('.pcode').dataset.code;const done=()=>{c.textContent='Copied';setTimeout(()=>{c.textContent='Copy';},1600);};
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(done,()=>{});else{const t=document.createElement('textarea');t.value=code;document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(_){}t.remove();}}
 });
-async function doCreate(name){const c=cleanName(name);if(c.err)throw new Error(c.err);const r=await API.createPlayer(c.name);store.set('cc:profile',{id:r.player_id,name:r.name,code:r.code});return r;}
+async function doCreate(name){const c=cleanName(name);if(c.err)throw new Error(c.err);const r=await API.createPlayer(c.name);store.set('cc:profile',{id:r.player_id,name:r.name,code:r.code});track('profile_create');return r;}
 
 /* ---- leaderboard block on end screens ---- */
 const lbHTML=id=>`<div class="lbbox" id="${id}"></div>`;
 function mountLB(id,board,opts){
   const box=document.getElementById(id);if(!box)return;const sub=store.get(subKey(board)),pr=profile();
   const head=`<h3>${esc(opts.title)}</h3>${previewNote()}`;
-  const after=(res,code)=>{store.set(subKey(board),1);mountLB(id,board,{...opts,entry:null,posted:res,fresh:code});};
+  const after=(res,code)=>{store.set(subKey(board),1);SHARE.post[board]=res;track('post_score',{kind:boardKind(board),rank:res.rank,field:res.field,fresh:!!code});if(SHARE.rebuild)SHARE.rebuild();mountLB(id,board,{...opts,entry:null,posted:res,fresh:code});};
   if(opts.entry&&!sub&&pr){
     box.innerHTML=head+`<div class="postbox"><p>Post your score as <b>${esc(pr.name)}</b> to earn Caddy Cup points.</p><div class="row"><button class="btn primary" data-post>Post score</button></div><p class="err" aria-live="polite"></p></div><div class="lbt"></div>`;
     const b=box.querySelector('[data-post]');b.onclick=async()=>{b.disabled=true;try{after(await API.submit(board,opts.entry));}catch(e){b.disabled=false;box.querySelector('.err').textContent=errMsg(e);}};
@@ -1777,7 +1790,7 @@ async function loadBoard(el,board,opts){
   el.innerHTML='<p class="muted">Loading leaderboard...</p>';
   try{const rows=await API.board(board);if(!rows.length){el.innerHTML='<p class="muted">No scores yet. Be the first.</p>';return;}
     const you=rows.find(r=>r.you),tot=rows[0].total,list=rows.slice(0,25);if(you&&you.rank>25)list.push(you);
-    if(you){store.set(subKey(board),1);const pb=el.parentNode&&el.parentNode.querySelector('.postbox');if(pb)pb.outerHTML='<p class="muted small">Your ranked score for this board is already posted. This one counts as practice.</p>';}
+    if(you){store.set(subKey(board),1);if(you.points!=null&&!SHARE.post[board]){SHARE.post[board]={points:you.points,rank:you.rank,field:tot};if(SHARE.rebuild)SHARE.rebuild();}const pb=el.parentNode&&el.parentNode.querySelector('.postbox');if(pb)pb.outerHTML='<p class="muted small">Your ranked score for this board is already posted. This one counts as practice.</p>';}
     el.innerHTML=`${you?`<p class="lbyou">You are <b>${ord(you.rank)}</b> of ${tot}${tot>2&&you.rank<tot?`, ahead of ${Math.round(100*(tot-you.rank)/(tot-1))}% of players`:''}.</p>`:''}
     <div class="tbl"><table class="lb"><thead><tr><th>#</th><th>Player</th><th>${esc(opts.scoreLabel||'Score')}</th><th>Pts</th></tr></thead><tbody>
     ${list.map(r=>`<tr class="${r.you?'you':''}"><td>${r.rank}</td><td>${esc(r.name)}</td><td class="n">${opts.fmt?opts.fmt(r.score):r.score}</td><td>${r.points!=null?r.points:''}</td></tr>`).join('')}</tbody></table></div>`;}
@@ -1834,7 +1847,7 @@ async function renderProfile(fresh){
     cf.onsubmit=async ev=>{ev.preventDefault();const er=cf.querySelector('.err'),b=cf.querySelector('button');er.textContent='';b.disabled=true;
       try{const r=await doCreate(cf.querySelector('input').value);renderProfile(r.code);}catch(e){b.disabled=false;er.textContent=e.message&&/^Use 2|^Please pick/.test(e.message)?e.message:errMsg(e);}};
     lf.onsubmit=async ev=>{ev.preventDefault();const er=lf.querySelector('.err'),b=lf.querySelector('button');er.textContent='';b.disabled=true;
-      try{const r=await API.login(lf.querySelector('input').value);store.set('cc:profile',{id:r.player_id,name:r.name,code:r.code});renderProfile();}catch(e){b.disabled=false;er.textContent=errMsg(e);}};
+      try{const r=await API.login(lf.querySelector('input').value);store.set('cc:profile',{id:r.player_id,name:r.name,code:r.code});daysSynced=false;track('profile_login');renderProfile();}catch(e){b.disabled=false;er.textContent=errMsg(e);}};
     return;
   }
   $app.innerHTML=`<section class="end prof"><div><span class="kicker">Your profile</span><h1>${esc(pr.name)}</h1></div>${previewNote()}
@@ -1844,10 +1857,12 @@ async function renderProfile(fresh){
   const so=document.getElementById('signout');so.onclick=()=>{if(!so.dataset.armed){so.dataset.armed=1;so.textContent='Tap again to sign out';setTimeout(()=>{if(so.isConnected){delete so.dataset.armed;so.textContent='Sign out';}},4000);return;}
     store.set('cc:profile',null);store.set('cc:pid',newId());renderProfile();};
   const el=document.getElementById('pstats');
-  try{const s=await API.stats();if(!el.isConnected)return;const vp=s.daily_vs_par==null?'-':(+s.daily_vs_par>0?'+':+s.daily_vs_par<0?'\u2212':'')+Math.abs(+s.daily_vs_par).toFixed(1);
+  try{const s=await API.stats();if(s&&Array.isArray(s.days))store.set('cc:sdays',s.days);if(!el.isConnected)return;const stk=streakInfo();const vp=s.daily_vs_par==null?'-':(+s.daily_vs_par>0?'+':+s.daily_vs_par<0?'\u2212':'')+Math.abs(+s.daily_vs_par).toFixed(1);
     el.innerHTML=`<div class="stats pstats">
       <div class="stat"><span class="big">${s.cup_rank?'#'+s.cup_rank:'-'}</span><span>Caddy Cup${s.cup_field?' of '+s.cup_field:''}</span></div>
       <div class="stat"><span class="big">${s.cup_points||0}</span><span>Points · ${esc(s.season||'')}</span></div>
+      <div class="stat"><span class="big">${stk.cur}</span><span>Day streak</span></div>
+      <div class="stat"><span class="big">${stk.best}</span><span>Best streak</span></div>
       <div class="stat"><span class="big">${(+s.dailies||0)+(+s.weeklies||0)}</span><span>Ranked rounds</span></div>
       <div class="stat"><span class="big">${+s.wins||0}</span><span>Wins</span></div>
       <div class="stat"><span class="big">${+s.top10||0}</span><span>Top 10s</span></div>
@@ -1858,6 +1873,115 @@ async function renderProfile(fresh){
       ${s.recent.map(r=>`<tr><td>${new Date(r.bdate+'T12:00:00Z').toLocaleDateString(undefined,{month:'short',day:'numeric',timeZone:'UTC'})}</td><td>${r.kind==='daily'?'Daily':'Weekly 18'}</td><td class="n">${r.kind==='daily'?r.score:fmtTP(+r.score)}</td><td>${ord(+r.rank)} of ${r.field}</td><td>${r.points}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">No ranked rounds yet. Play the daily or the weekly 18 and post your score.</p>'}`;}
   catch(e){el.innerHTML=`<p class="muted">${LB_LIVE&&/no profile/.test(String(e.message))?'This profile was not found on the server. Sign out and sign in with your player code.':'Your stats are unavailable right now.'}</p>`;}
 }
+
+/* ===== Streaks: consecutive US Eastern days with a ranked daily. Local plays plus the days the server knows. ===== */
+const dayOff=(k,n)=>{const[y,m,d]=k.split('-').map(Number);return new Date(Date.UTC(y,m-1,d+n)).toISOString().slice(0,10);};
+const dayNoOf=k=>{const[y,m,d]=k.split('-').map(Number);return Math.floor((Date.UTC(y,m-1,d)-EPOCH)/864e5)+1;};
+const momentOf=k=>{const n=dayNoOf(k);return MOMENTS.find(m=>m.id===ROTATION[((n-1)%ROTATION.length+ROTATION.length)%ROTATION.length])||MOMENTS[0];};
+const yKey=dayOff(dateKey,-1);
+function playedDays(){const s=new Set((store.get('cc:sdays')||[]).filter(x=>typeof x==='string'));
+  try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&/^clutchcard:\d{4}-\d\d-\d\d$/.test(k))s.add(k.slice(11));}}catch(e){}return s;}
+function streakInfo(){const s=playedDays(),run=k=>{let n=0;while(s.has(k)){n++;k=dayOff(k,-1);}return n;};
+  const today=s.has(dateKey),yday=s.has(yKey);let best=0;for(const k of s)if(!s.has(dayOff(k,1)))best=Math.max(best,run(k));
+  return{cur:today?run(dateKey):run(yKey),best,today,yday,played:s.size,save:yday?0:run(dayOff(yKey,-1)),canYesterday:!yday&&dayNoOf(yKey)>=1};}
+function streakHTML(){const st=streakInfo();
+  if(st.today&&st.cur>=1)return `<p class="streak" id="streakslot"><span aria-hidden="true">🔥</span> <b>${st.cur}-day streak.</b> ${st.cur>1&&st.cur>=st.best?'Your best yet.':'See you tomorrow.'}</p>`;
+  if(st.cur>=1)return `<p class="streak risk" id="streakslot"><span aria-hidden="true">🔥</span> <b>${st.cur}-day streak.</b> Play today to keep it going.</p>`;
+  return '<p id="streakslot" hidden></p>';}
+function yesterdayHTML(){const st=streakInfo();if(!st.canYesterday||!st.played)return '<div id="yslot" hidden></div>';
+  const m=momentOf(yKey);
+  return `<article class="ycard" id="yslot"><div class="ytext"><span class="kicker">Missed yesterday?</span><b>Daily #${dayNoOf(yKey)} · ${esc(m.title)}</b><span class="muted small">${st.save?`Play it to save your ${st.save}-day streak. It still counts for the Caddy Cup.`:'It still counts for your streak and the Caddy Cup.'}</span></div><button class="btn" data-act="yesterday">Play yesterday's hole</button></article>`;}
+/* Rewarded-ad slot: when ads go in, show the ad here and start the hole when it pays out. */
+function playYesterday(){track('daily_start',{day:dayNoOf(yKey),yesterday:true});start(momentOf(yKey).id,true,yKey);}
+let daysSynced=false;
+async function syncDays(){if(daysSynced||!profile())return;daysSynced=true;
+  try{const s=await API.stats();if(s&&Array.isArray(s.days)){store.set('cc:sdays',s.days);const a=document.getElementById('streakslot');if(a)a.outerHTML=streakHTML();const y=document.getElementById('yslot');if(y)y.outerHTML=yesterdayHTML();}}catch(e){}}
+
+/* ===== Analytics. Page views: Vercel Web Analytics (script tag in the page head). Game funnel: a small event log
+   in Supabase (log_events). Random device ID only: no names, emails or IP addresses. Off in preview mode. ===== */
+const EVQ=[],SID=Math.random().toString(36).slice(2,10);let evT=0,opened=false;
+function track(n,p){try{if(!LB_LIVE)return;EVQ.push({n,p:p||{}});clearTimeout(evT);evT=setTimeout(flushEv,2500);}catch(e){}}
+function flushEv(){if(!EVQ.length||!LB_LIVE)return;const pr=profile(),batch=EVQ.splice(0,25);
+  try{fetch(CC.supabaseUrl+'/rest/v1/rpc/log_events',{method:'POST',headers:lbHeaders(),keepalive:true,body:JSON.stringify({p_device:anonId(),p_player:pr?pr.id:null,p_session:SID,p_events:batch})}).catch(()=>{});}catch(e){}
+  if(EVQ.length)evT=setTimeout(flushEv,400);}
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushEv();});
+addEventListener('pagehide',flushEv);
+function trackOpen(){if(opened)return;opened=true;let ref='';try{const h=document.referrer?new URL(document.referrer).hostname:'';ref=/clutchcadd/.test(h)?'':h;}catch(e){}
+  const q=new URLSearchParams(location.search),st=streakInfo();
+  track('app_open',{ref,src:q.get('utm_source')||q.get('ref')||'',app:!!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches),returning:st.played>0,streak:st.cur,profile:!!profile(),w:innerWidth<600?'phone':innerWidth<1000?'tablet':'desktop'});}
+
+/* ===== Share image: a 1080x1350 card (fits Instagram, X and texts) drawn on a canvas. ===== */
+const SITE_URL='https://www.clutchcaddy.com';
+const SHARE={post:{}};
+const SCOL={bg:'#FFFFFF',card:'#F3F6F2',ink:'#111A14',muted:'#6B776F',turf:'#1C7C47',soft:'#E3F1E7',flag:'#F2B91D',best:'#21A055',close:'#D6A100',cost:'#EA7A2E',miss:'#E5483F'};
+function svgToImage(svgEl){return new Promise((res,rej)=>{try{
+  const c=svgEl.cloneNode(true),A=[svgEl,...svgEl.querySelectorAll('*')],B=[c,...c.querySelectorAll('*')];
+  const P=['fill','stroke','stroke-width','stroke-dasharray','stroke-linecap','stroke-linejoin','opacity','fill-opacity','stroke-opacity','font-family','font-size','font-weight','paint-order','text-anchor','dominant-baseline','display','visibility','filter'];
+  A.forEach((e,i)=>{if(/^(stop|fe|filter|lineargradient|radialgradient|pattern|clippath|defs|mask)/i.test(e.tagName))return;const cs=getComputedStyle(e);B[i].setAttribute('style',P.map(p=>p+':'+cs.getPropertyValue(p)).join(';'));});
+  c.setAttribute('xmlns','http://www.w3.org/2000/svg');c.setAttribute('width','600');c.setAttribute('height','1040');c.removeAttribute('class');
+  const url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(c)],{type:'image/svg+xml'}));
+  const im=new Image();im.onload=()=>{URL.revokeObjectURL(url);res(im);};im.onerror=e=>{URL.revokeObjectURL(url);rej(e);};im.src=url;}catch(e){rej(e);}});}
+function cWrap(x,t,X,Y,maxW,lh,maxL){const w=String(t).split(' ');let line='',L=[];for(const s of w){const q=line?line+' '+s:s;if(x.measureText(q).width>maxW&&line){L.push(line);line=s;}else line=q;}if(line)L.push(line);
+  if(L.length>maxL){L=L.slice(0,maxL);L[maxL-1]=L[maxL-1].replace(/\s*\S*$/,'')+'…';}L.forEach((l,i)=>x.fillText(l,X,Y+i*lh));return L.length;}
+function cRect(x,X,Y,W,H,R){x.beginPath();if(x.roundRect)x.roundRect(X,Y,W,H,R);else x.rect(X,Y,W,H);}
+async function drawShareCard(sp){
+  try{await document.fonts.ready;}catch(e){}
+  const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d'),cs=getComputedStyle(document.documentElement);
+  const disp=(cs.getPropertyValue('--display')||'').trim()||'system-ui,sans-serif',body=(cs.getPropertyValue('--body')||'').trim()||'system-ui,sans-serif';
+  const F=(w,s,b)=>`${w} ${s}px ${b?body:disp}`;
+  x.fillStyle=SCOL.bg;x.fillRect(0,0,W,H);x.textBaseline='alphabetic';
+  x.fillStyle=SCOL.ink;x.fillRect(60,60,6,52);x.fillStyle=SCOL.flag;x.beginPath();x.moveTo(66,60);x.lineTo(104,73);x.lineTo(66,86);x.closePath();x.fill();
+  x.fillStyle=SCOL.ink;x.font=F(800,44);x.fillText('Clutch Caddie',122,102);
+  x.font=F(700,28,1);const tw=x.measureText(sp.tag).width;cRect(x,W-60-tw-48,58,tw+48,56,28);x.fillStyle=SCOL.soft;x.fill();x.fillStyle=SCOL.turf;x.fillText(sp.tag,W-60-tw-24,96);
+  x.fillStyle=SCOL.muted;x.font=F(600,30,1);cWrap(x,sp.kicker,60,184,960,38,1);
+  x.fillStyle=SCOL.ink;x.font=F(800,66);const tl=cWrap(x,sp.title,60,262,960,72,2);
+  let top=262+(tl-1)*72+56;const FOOT=H-170;
+  const box=(X,Y,w,h,o,dark)=>{cRect(x,X,Y,w,h,28);x.fillStyle=dark?SCOL.turf:SCOL.card;x.fill();const ink=dark?'#fff':SCOL.ink;
+    x.fillStyle=dark?'rgba(255,255,255,.8)':SCOL.muted;x.font=F(700,26,1);x.fillText(o.label,X+26,Y+48);
+    x.fillStyle=ink;x.font=F(800,o.val.length>3?96:124);x.fillText(o.val,X+22,Y+h-62);x.fillStyle=dark?'rgba(255,255,255,.85)':SCOL.muted;x.font=F(600,28,1);x.fillText(o.sub,X+26,Y+h-24);};
+  const label=(t,X,Y)=>{x.fillStyle=SCOL.muted;x.font=F(700,22,1);x.fillText(t.toUpperCase(),X,Y);};
+  const squares=(calls,X,Y,maxW,s)=>{let cx=X,cy=Y;for(const c of calls){if(cx+s>X+maxW){cx=X;cy+=s+10;}cRect(x,cx,cy,s,s,10);x.fillStyle=SCOL[c]||SCOL.muted;x.fill();cx+=s+10;}return cy+s;};
+  let mapImg=null;if(sp.map){try{mapImg=await svgToImage(sp.map);}catch(e){mapImg=null;}}
+  if(mapImg){
+    const mh=Math.min(763,FOOT-40-top),mw=Math.round(mh*300/520);x.save();cRect(x,60,top,mw,mh,28);x.clip();x.drawImage(mapImg,60,top,mw,mh);x.restore();
+    const rx=60+mw+40,rw=W-60-rx,bw=(rw-20)/2;let y=top;
+    box(rx,y,bw,230,sp.you,true);box(rx+bw+20,y,bw,230,sp.pro,false);y+=230+70;
+    x.fillStyle=SCOL.ink;x.font=F(800,46);y+=(cWrap(x,sp.verdict,rx,y,rw,54,2)-1)*54+60;
+    label('Your calls',rx,y);y=squares(sp.calls||[],rx,y+18,rw,46)+64;
+    label('Clutch rating',rx,y);x.fillStyle=SCOL.ink;x.font=F(800,76);x.fillText(String(sp.rating),rx,y+74);y+=130;
+    x.font=F(600,30,1);x.fillStyle=SCOL.ink;for(const t of sp.extras||[]){if(y>FOOT-90)break;x.fillText(t,rx,y);y+=46;}
+    const ly=top+mh-14;x.lineWidth=6;x.lineCap='round';x.strokeStyle=sp.youColor||SCOL.flag;x.beginPath();x.moveTo(rx,ly-10);x.lineTo(rx+44,ly-10);x.stroke();
+    x.fillStyle=SCOL.muted;x.font=F(600,24,1);x.fillText('You',rx+56,ly);const pw=x.measureText('You').width;
+    x.setLineDash([12,10]);x.strokeStyle=SCOL.muted;x.beginPath();x.moveTo(rx+pw+90,ly-10);x.lineTo(rx+pw+134,ly-10);x.stroke();x.setLineDash([]);x.fillText(sp.proName||'Pro',rx+pw+146,ly);
+  }else{
+    let y=top;const bw=(960-24)/2;box(60,y,bw,230,sp.you,true);box(60+bw+24,y,bw,230,sp.pro,false);y+=230+72;
+    x.fillStyle=SCOL.ink;x.font=F(800,48);y+=(cWrap(x,sp.verdict,60,y,960,56,2)-1)*56+54;
+    if(sp.card&&sp.card.length){const n=sp.card.length,cols=Math.min(9,n),cw=(960-(cols-1)*10)/cols,ch=104;
+      sp.card.forEach((h,i)=>{const X=60+(i%cols)*(cw+10),Y=y+Math.floor(i/cols)*(ch+12),d=h.s-h.par,f=d<=-1?SCOL.best:d===1?SCOL.cost:d>=2?SCOL.miss:SCOL.card;
+        cRect(x,X,Y,cw,ch,18);x.fillStyle=f;x.fill();const ink=d===0?SCOL.ink:'#fff';x.fillStyle=d===0?SCOL.muted:'rgba(255,255,255,.85)';x.font=F(700,20,1);x.textAlign='center';x.fillText(String(h.no),X+cw/2,Y+30);
+        x.fillStyle=ink;x.font=F(800,50);x.fillText(String(h.s),X+cw/2,Y+86);x.textAlign='left';});
+      y+=Math.ceil(n/cols)*(ch+12)+56;}
+    label('Clutch rating',60,y);x.fillStyle=SCOL.ink;x.font=F(800,76);x.fillText(String(sp.rating),60,y+76);
+    x.font=F(600,30,1);let ey=y+20;for(const t of sp.extras||[]){x.fillText(t,420,ey+20);ey+=46;}
+  }
+  x.fillStyle=SCOL.turf;x.fillRect(0,FOOT,W,H-FOOT);
+  x.fillStyle='#fff';x.font=F(800,58);x.fillText(sp.cta||'Can you beat it?',60,FOOT+86);
+  x.fillStyle=SCOL.flag;x.font=F(700,34,1);x.fillText('clutchcaddy.com',60,FOOT+136);
+  x.fillStyle='rgba(255,255,255,.8)';x.font=F(600,26,1);x.textAlign='right';x.fillText('A new famous shot every day',W-60,FOOT+136);x.textAlign='left';
+  return new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error('no blob')),'image/png'));}
+function shareBlockHTML(title,txt){return `<div class="share"><h3>${esc(title)}</h3><div class="sharecard"><div class="shareimg" id="shareImg"><span class="muted small">Drawing your card...</span></div>
+  <div class="sharebtns"><button class="btn primary" id="shareImgBtn" disabled>Share image</button><button class="btn" id="copy">Copy text</button><span class="muted small" id="copied" aria-live="polite"></span></div></div>
+  <pre id="sharetxt">${esc(txt)}</pre></div>`;}
+function canShareFiles(){try{return !!(SHARE.file&&navigator.canShare&&navigator.canShare({files:[SHARE.file]}));}catch(e){return false;}}
+async function prepShare(build,fname,txt){SHARE.rebuild=()=>prepShare(build,fname,txt);SHARE.fname=fname;SHARE.txt=txt;const gen=SHARE.gen=(SHARE.gen||0)+1;
+  try{const blob=await drawShareCard(build());if(gen!==SHARE.gen)return;if(SHARE.url)URL.revokeObjectURL(SHARE.url);SHARE.url=URL.createObjectURL(blob);SHARE.file=new File([blob],fname,{type:'image/png'});
+    const bx=document.getElementById('shareImg');if(bx)bx.innerHTML=`<img src="${SHARE.url}" alt="Your Clutch Caddie share card">`;const b=document.getElementById('shareImgBtn');if(b){b.disabled=false;b.textContent=canShareFiles()?'Share image':'Save image';}}
+  catch(e){const bx=document.getElementById('shareImg');if(bx)bx.innerHTML='<span class="muted small">This browser could not draw the image. The text version below still works.</span>';}}
+function doShareImage(){if(!SHARE.file)return;const note=t=>{const c=document.getElementById('copied');if(c)c.textContent=t;};
+  const dl=()=>{const a=document.createElement('a');a.href=SHARE.url;a.download=SHARE.fname;document.body.appendChild(a);a.click();a.remove();track('share',{kind:'image',method:'download'});note('Saved. Post it anywhere.');};
+  if(canShareFiles())navigator.share({files:[SHARE.file],text:SHARE.txt+'\n'+SITE_URL}).then(()=>track('share',{kind:'image',method:'share'})).catch(e=>{if(e&&e.name==='AbortError')return;dl();});else dl();}
+function shareExtras(board,withStreak){const out=[],st=streakInfo();if(withStreak&&st.cur>=2)out.push(`🔥 ${st.cur}-day streak`);const p=board&&SHARE.post[board];if(p)out.push(`+${p.points} Caddy Cup pts · ${ord(+p.rank)} of ${p.field}`);return out;}
+function ghostColor(cls,fb){try{const el=document.querySelector(`#summap .${cls} path, #summap path.${cls}, #summap .${cls}`);if(el){const s=getComputedStyle(el).stroke;if(s&&s!=='none')return s;}}catch(e){}return fb;}
 
 function weeklyCardHTML(){
   const r=weeklyRound,st=store.get(WKEY),sc=st&&st.done?st.scores:st&&st.round?st.round.scores:[],done=st&&st.done,n=sc.length;
@@ -1888,6 +2012,7 @@ function dailyCardHTML(){
       <p>${esc(m.stakes)}</p>
       ${m.vs&&m.vs.note?`<p class="muted">${esc(m.vs.note)}</p>`:''}
       ${done?`<p class="pstat">You made <b>${done.score}</b> (${relName(done.score,m.par).toLowerCase()}), clutch rating ${done.rating}.</p>`:''}
+      ${streakHTML()}
       <div class="cta">${done?`<button class="btn primary" data-act="dailyboard">Leaderboard</button><button class="btn" data-act="practice" data-m="${m.id}">Play it again</button>`
         :`<button class="btn primary" data-act="daily">Take the shot</button>`}</div>
       <p class="muted small">${done?'Replays are practice.':'One ranked try a day.'} New moment at midnight ET.</p>
@@ -1897,7 +2022,24 @@ function dailyCardHTML(){
 }
 
 /* ================= SHOT SHAPES (optional) ================= */
-const SHAPES={draw:{label:'Draw',lng:d=>.04*d+3,L:1.12,sign:1},straight:{label:'Straight',lng:()=>0,L:1,sign:0},fade:{label:'Fade',lng:d=>-.03*d,L:.82,sign:-1}};
+/* Draw: flies farther and rolls out (wider long-short spread), misses lean left (hooks).
+   Fade: a bit shorter, lands soft and stops (tighter long-short spread), misses lean right (slices).
+   Straight: stock distance, misses either side. Lean = misses on the shape's side are 25% bigger, the other side 20% smaller. */
+const SHAPES={draw:{label:'Draw',lng:d=>.04*d+3,L:1.12,sign:1,miss:-1},straight:{label:'Straight',lng:()=>0,L:1,sign:0,miss:0},fade:{label:'Fade',lng:d=>-.03*d,L:.82,sign:-1,miss:1}};
+const MISS_LEAN=[1.25,.8];
+function latLean(shape,z){const m=(SHAPES[shape]||SHAPES.straight).miss;return !m?1:Math.sign(z)===m?MISS_LEAN[0]:MISS_LEAN[1];}
+function shapeYds(k,d){return Math.round(Math.abs((SHAPES[k]||SHAPES.straight).lng(d)));}
+function shapeLine(k,d,short){const n=shapeYds(k,d);
+  if(short)return k==='draw'?`+${n} yds · rolls out · misses lean left`:k==='fade'?`\u2212${n} yds · stops fast · misses lean right`:'Stock distance · misses either side';
+  return k==='draw'?`<b>Draw</b> curves right to left. About ${n} yards longer with more roll, so it's harder to stop. Misses lean left.`
+    :k==='fade'?`<b>Fade</b> curves left to right. About ${n} yards shorter, but it lands soft and stops. Misses lean right.`
+    :`<b>Straight</b> flies your stock number. No extra roll or bite, and misses can go either way.`;}
+function shapeMetric(ball,club){const near=ydsBetween(ball,pinPt())<=club.max+15;return near?{k:'green',lbl:'on the green'}:{k:'fw',lbl:'in the fairway'};}
+function updShapeUI(od){if(!G||!G.aim||!G.aim.club||!G.aimCtx)return;const{ball,lie}=G.aimCtx,club=G.aim.club,t=G.aim.t,d=ydsBetween(ball,t),cur=G.aim.shape||'straight',met=shapeMetric(ball,club);
+  const pct=k=>{const c=k===cur&&od?od:oddsFor(ball,t,club,lie,k),tot=Object.values(c).reduce((a,b)=>a+b,0)||1;return Math.round((c[met.k]||0)/tot*100);};
+  const P={};['draw','straight','fade'].forEach(k=>P[k]=pct(k));
+  document.querySelectorAll('[data-shape]').forEach(b=>{const s=b.querySelector('small');if(s)s.textContent=P[b.dataset.shape]+'%';});
+  document.querySelectorAll('.shapenote').forEach(el=>{const sh=el.classList.contains('short');el.innerHTML=sh?`${esc(shapeLine(cur,d,true))} <span class="muted">· % ${met.lbl}</span>`:`${shapeLine(cur,d)} <span class="muted">The % on each button is the chance to finish ${met.lbl}.</span>`;});}
 const shapesOn=()=>true;
 const shapeKeys=()=>shapesOn()?['draw','straight','fade']:['straight'];
 function shapeAdj(shape,distYds){const S=SHAPES[shape]||SHAPES.straight;return{shift:S.lng(distYds),Lk:S.L};}
@@ -1905,7 +2047,7 @@ function setShape(k){if(!G||!G.aim||!G.aim.club||!SHAPES[k])return;G.aim.shape=k
   document.querySelectorAll('[data-shape]').forEach(b=>{const on=b.dataset.shape===k;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);});
   setTarget(G.aim.t);}
 function shapeCtlHTML(){if(!G.aim.club)return'';const cur=G.aim.shape||'straight';
-  return `<div class="seg" role="group" aria-label="Shot shape">${['draw','straight','fade'].map(k=>`<button class="segbtn ${cur===k?'on':''}" data-shape="${k}" aria-pressed="${cur===k}">${SHAPES[k].label}</button>`).join('')}</div>`;}
+  return `<div class="seg" role="group" aria-label="Shot shape">${['draw','straight','fade'].map(k=>`<button class="segbtn ${cur===k?'on':''}" data-shape="${k}" aria-pressed="${cur===k}">${SHAPES[k].label}<small></small></button>`).join('')}</div>`;}
 
 /* ================= HOLE SUMMARY MAP: your shots vs the pro's (approximate) ================= */
 function strokesOf(m){return m.real!=null?m.real:(m.pro&&m.pro.score)||0;}
@@ -1996,10 +2138,16 @@ function summaryHTML(){
 function openSettings(){const d=document.getElementById('settings');if(!d)return;try{d.showModal();}catch(e){d.setAttribute('open','');}}
 
 /* ================= FIRST-TIME WALKTHROUGH ================= */
+function shapeResult(L){const k=L.shape;if(!k||k==='straight'||!L.z||L.out.to===HOLED)return'';const z0=L.z[0],z1=L.z[1],S=SHAPES[k],onG=/^(putt|tap)/.test(L.out.to);
+  let t='';if(Math.sign(z1)===S.miss&&Math.abs(z1)>1.1)t=k==='draw'?'The draw turned over and finished left. That is the miss a draw brings.':'The fade slid right. That is the miss a fade brings.';
+  else if(k==='draw'&&z0>.8)t='The draw came out hot and ran past your number.';
+  else if(k==='fade'&&onG)t='The fade landed soft and held the green.';
+  else if(k==='draw'&&onG)t='The draw gave you the extra yards and chased onto the green.';
+  return t?`<p class="lienote">${t}</p>`:'';}
 const TIPS={
   home:{a:'.pcard.dl [data-act="daily"]',t:'Start here. One famous moment a day and one ranked try. Everything under All challenges is free practice.'},
   club:{a:()=>innerWidth<=820?'.aimbar.pick':'.bag',t:'Pick a club first. Each one shows its normal distance.'},
-  aim:{a:'#course',t:'Drag anywhere on the hole to move your aim. The oval is where most shots with this club land. Check the odds, then hit it.',inside:true},
+  aim:{a:'#course',t:'Drag anywhere on the hole to move your aim. The oval is where most shots land. Try Draw, Straight and Fade: each changes the distance, how it lands and which side it misses. The % on each one is your odds.',inside:true},
   result:{a:'#resultslot .verdict',t:'Every decision is graded against the best play on the board. Green means you made the tour call.'},
   putt:{a:'#gview',t:'Drag the white handle to set your line and pace. The arrows point downhill. Then stroke it.',inside:true},
   summary:{a:'#summary',t:'Your shots are numbered in gold. The dashed line shows how the pro played the hole.'}
@@ -2042,6 +2190,7 @@ function renderIntro(){
   <section class="playnow">
     <h2 class="sr-only">Play now</h2>
     <div class="pgrid">${dailyCardHTML()}${weeklyCardHTML()}</div>
+    ${yesterdayHTML()}
     ${cupCardHTML()}
     <details class="howbox"><summary>How it works</summary><div class="how">
         <h3>How it works</h3>
@@ -2063,7 +2212,7 @@ function renderIntro(){
     </details>`).join('')}
   </section>`;
   bindSections(m,done);
-  fillCupCard();
+  fillCupCard();syncDays();
 }
 const SECTIONS=[
   {id:'wins',title:'Win it like they did',desc:'Single-hole moments that won majors.',count:()=>MOMENTS.filter(x=>x.role!=='runner-up'&&x.role!=='movie').length,
@@ -2087,9 +2236,9 @@ function mcardHTML(x,m,done){const ru=x.role==='runner-up';const mv=x.role==='mo
   return `<button class="mcard ${x===m?'today':''}" data-act="${x===m&&!done?'daily':'practice'}" data-m="${x.id}">
     <span class="badge">${x===m?'Today · ':''}${x.role==='movie'?esc(x.event)+' · '+x.year:esc(x.short)+' · '+x.year}</span><span class="t">${esc(x.title)}</span><span class="s">${esc(x.event)} · ${esc(x.holeLine)}</span>${ru?`<span class="beat">Beat ${x.vs?esc(x.vs.name.split(' ')[0]):esc(x.short)}'s ${x.vs?x.vs.score:x.pro.score}</span>`:''}${mv?`<span class="beat">${x.vs.name===x.player?`Beat ${esc(x.short)}'s ${x.vs.score}`:`Beat ${esc(x.vs.name)}`}</span>`:''}</button>`;}
 function findMoment(id){return MOMENTS.find(x=>x.id===id)||ROUNDS.flatMap(r=>r.holes.concat(poHoles(r))).find(x=>x.id===id);}
-function start(mid,daily){
-  const m=typeof mid==='object'?mid:findMoment(mid);
-  G={m,daily,aim:null,green:null,seed:daily?dateKey:String(Math.random()),state:m.start,strokes:0,calls:[],shots:[],trail:[],splashes:[],shotNo:1,phase:'choose',last:null,view:[0,0,300,520]};
+function start(mid,daily,dk){
+  const m=typeof mid==='object'?mid:findMoment(mid);dk=daily?(dk||dateKey):null;
+  G={m,daily,dk,dno:dk?dayNoOf(dk):null,aim:null,green:null,seed:daily?dk:String(Math.random()),state:m.start,strokes:0,calls:[],shots:[],trail:[],splashes:[],shotNo:1,phase:'choose',last:null,view:[0,0,300,520]};
   G.trail.push(ballPos(m,m.start,null,0));
   renderPlay();window.scrollTo({top:0});
 }
@@ -2138,15 +2287,16 @@ function resultHTML(){
   const ps=G.m.pro.shots[G.shotNo-1];
   const pro=ps?`<div class="note"><b>${G.m.role==='movie'?`In the movie, shot ${G.shotNo}`:`What ${esc(G.m.short)} did on shot ${G.shotNo}`}</b>${G.m.role==='movie'?'':esc(ps.club)+'. '}${esc(ps.text)}</div>`:'';
   const done=L.out.to===HOLED;
+  const shapeNote=L.full?shapeResult(L):'';
   const lieNote=L.full&&L.lieLoss>=2?`<p class="lienote">${L.lie==='sand'?'The bunker':'The rough'} grabbed it. That lie cost you about ${L.lieLoss} yards.</p>`:'';
-  return `<div class="result">${verdict}<p class="outcome">${esc(L.text)}</p>${lieNote}${pro}
+  return `<div class="result">${verdict}<p class="outcome">${esc(L.text)}</p>${shapeNote}${lieNote}${pro}
     <div class="cta"><button class="btn primary" id="next">${done?(G.round?'Hole summary':'See your card'):'Next shot'}</button>${reduce?'':'<button class="btn" id="replay">Replay shot</button>'}</div></div>`;
 }
 
 function choose(opId){
   const s=getState(G.state);const op=s.options.find(x=>x.id===opId);const ev=evaluate(G.state);
   const i=s.options.indexOf(op);const delta=ev.evs[i]-ev.best;const graded=s.options.length>1;
-  const r=G.daily?rand01(hash([dateKey,G.m.id,G.state,opId,G.shotNo].join('|'))):Math.random();
+  const r=G.daily?rand01(hash([G.dk||dateKey,G.m.id,G.state,opId,G.shotNo].join('|'))):Math.random();
   const out=pick(op.outcomes,r);
   const onProPath=!!s.pro; // every scripted moment state with a pro note sits on the real path
   G.strokes+=1+(out.pen||0);
@@ -2286,22 +2436,24 @@ function finish(){
   if(G.round){ROUND.scores[ROUND.i]=G.strokes;ROUND.calls[ROUND.i]=G.calls.slice();ROUND.lost[ROUND.i]=G.lostTotal||0;renderHoleDone();window.scrollTo({top:0});return;}
   const rating=Math.round(100*Math.exp(-(G.lostTotal||0)/0.5));
   G.rating=rating;
-  if(G.daily)store.set(SKEY,{score:G.strokes,rating,calls:G.calls,m:m.id});
+  if(G.daily){store.set('clutchcard:'+(G.dk||dateKey),{score:G.strokes,rating,calls:G.calls,m:m.id});const pro=m.vs?m.vs.score:m.pro.score;
+    track('daily_finish',{day:G.dno||dayNo,yesterday:!!(G.dk&&G.dk!==dateKey),strokes:G.strokes,par:m.par,beat:G.strokes<pro,rating,streak:streakInfo().cur});}
   renderEnd();window.scrollTo({top:0});
 }
 
 function renderEnd(){
   const {m}=G;const you=G.strokes,opp=m.vs||{name:m.player+', '+m.year,score:m.pro.score},oppShort=m.vs?m.vs.name.split(' ')[0]:m.short,pro=opp.score;const diff=you-pro;
   const vs=diff<0?`You beat ${oppShort} by ${-diff}.`:diff===0?`You matched ${oppShort}.`:`${oppShort} beat you by ${diff}.`;
-  const shareTxt=`Clutch Caddie${G.daily?' #'+dayNo:' (practice)'}\n${m.role==='movie'?m.event+' · '+m.title:(m.role==='runner-up'?'Beat '+m.short+'? ':'')+m.short+' · '+m.event+' '+m.year+' · #'+m.holeNo}\n${G.calls.map(c=>EMO[c]).join('')} ${you} (${oppShort}: ${pro})\nClutch rating ${G.rating}`;
+  const shareTxt=`Clutch Caddie${G.daily?' #'+(G.dno||dayNo):' (practice)'}\n${m.role==='movie'?m.event+' · '+m.title:(m.role==='runner-up'?'Beat '+m.short+'? ':'')+m.short+' · '+m.event+' '+m.year+' · #'+m.holeNo}\n${G.calls.map(c=>EMO[c]).join('')} ${you} (${oppShort}: ${pro})\nClutch rating ${G.rating}`;
   const verdictLine=G.rating>=90?'Caddie-of-the-year calls.':G.rating>=70?'Solid tour-level decisions.':G.rating>=45?'A couple of calls cost you.':'The course managed you.';
   $app.innerHTML=`
   <section class="end">
-    <div><span class="kicker">${esc(m.title)} · ${G.daily?'Daily #'+dayNo:'Practice'}</span><h1>Your card</h1></div>
+    <div><span class="kicker">${esc(m.title)} · ${G.daily?'Daily #'+(G.dno||dayNo)+(G.dk!==dateKey?' (yesterday)':''):'Practice'}</span><h1>Your card</h1></div>
     <div class="board">
       <div><span class="who">You</span><span class="score ${scoreClass(you,m.par)}">${you}</span><span class="rel">${relName(you,m.par)}</span></div>
       <div><span class="who">${esc(opp.name)}</span><span class="score ${scoreClass(pro,m.par)}">${pro}</span><span class="rel">${relName(pro,m.par)}</span></div>
     </div>
+    ${G.daily?(()=>{const st=streakInfo();return `<p class="streak endstreak"><span aria-hidden="true">🔥</span> <b>${st.cur}-day streak.</b> ${G.dk!==dateKey?(st.today?'Streak saved.':"Streak saved. Today's hole is up next."):st.cur>1&&st.cur>=st.best?'Your best yet. New moment at midnight ET.':'New moment at midnight ET.'}</p>`;})():''}
     ${summaryHTML()}
     <div class="stats">
       <div class="stat"><span class="kicker">Result</span><span class="big">${diff===0?'Even':diff<0?'−'+(-diff):'+'+diff}</span><span>${esc(vs)}</span></div>
@@ -2319,12 +2471,15 @@ function renderEnd(){
     ${verdictFor(m,you)?`<p class="story" style="font-size:20px;font-weight:700">${esc(verdictFor(m,you))}</p>`:''}
     <p class="story"><b>What happened next.</b> ${esc(m.story)}</p>
     ${G.daily?lbHTML('lbd'):''}
-    <div class="share"><h3>Share your card</h3><pre id="sharetxt">${esc(shareTxt)}</pre>
-      <div class="cta"><button class="btn" id="copy">Copy</button><span class="muted" id="copied" aria-live="polite"></span></div></div>
-    <div class="cta"><button class="btn primary" data-act="practice" data-m="${m.id}">Play it again</button><button class="btn" data-act="home">All challenges</button></div>
+    ${shareBlockHTML('Share your card',shareTxt)}
+    <div class="cta">${G.daily&&G.dk!==dateKey&&!store.get(SKEY)?`<button class="btn primary" data-act="daily">Play today's hole</button>`:''}<button class="btn ${G.daily&&G.dk!==dateKey&&!store.get(SKEY)?'':'primary'}" data-act="practice" data-m="${m.id}">Play it again</button><button class="btn" data-act="home">All challenges</button></div>
   </section>`;
-  if(G.daily)mountLB('lbd','daily:'+dateKey,{title:`Daily #${dayNo} leaderboard`,scoreLabel:'Strokes',entry:{score:you,rating:G.rating,detail:{calls:G.calls,par:m.par,beat:you<pro}}});
-  document.getElementById('copy').onclick=()=>{const t=shareTxt;const done=()=>document.getElementById('copied').textContent='Copied.';
+  {const bd=G.daily?'daily:'+(G.dk||dateKey):null,snap={tag:G.daily?`DAILY #${G.dno||dayNo}`:'PRACTICE',kicker:m.role==='movie'?`${m.event} · ${m.year}`:`${m.player} · ${m.event} ${m.year} · Hole ${m.holeNo}`,title:m.title,
+      you:{label:'YOU',val:String(you),sub:relName(you,m.par)},pro:{label:oppShort.toUpperCase(),val:String(pro),sub:relName(pro,m.par)},verdict:vs,calls:G.calls.slice(),rating:G.rating,proName:oppShort,
+      youColor:ghostColor('gyou','#E5B21E'),cta:diff<0?`I beat ${oppShort}. Can you?`:'Can you beat it?'};
+    prepShare(()=>({...snap,map:document.querySelector('#summap'),extras:shareExtras(bd,G&&G.daily)}),`clutch-caddie-${G.daily?'daily-'+(G.dno||dayNo):'practice'}.png`,shareTxt);}
+  if(G.daily)mountLB('lbd','daily:'+(G.dk||dateKey),{title:`Daily #${G.dno||dayNo} leaderboard`,scoreLabel:'Strokes',entry:{score:you,rating:G.rating,detail:{calls:G.calls,par:m.par,beat:you<pro}}});
+  document.getElementById('copy').onclick=()=>{const t=shareTxt;track('share',{kind:'text',method:'copy'});const done=()=>document.getElementById('copied').textContent='Copied.';
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,()=>selectShare());}else selectShare();};
 }
 function selectShare(){const el=document.getElementById('sharetxt');const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);document.getElementById('copied').textContent='Selected. Copy it with your keyboard or long-press.';}
@@ -2332,7 +2487,7 @@ function selectShare(){const el=document.getElementById('sharetxt');const r=docu
 /* track lost strokes */
 const _choose=choose;
 choose=function(opId){_choose(opId);if(G.last.graded)G.lostTotal=(G.lostTotal||0)+Math.max(0,G.last.delta);};
-const _start=start;start=function(mid,daily){_start(mid,daily);G.lostTotal=0;};
+const _start=start;start=function(mid,daily,dk){_start(mid,daily,dk);G.lostTotal=0;};
 
 /* ================= FULL SHOTS: aim, dispersion, landing ================= */
 const SURF=['rough','fw','water','sand','green','tree','oob'];
@@ -2453,7 +2608,7 @@ function spread(dist,club,lie){const lf={tee:1,fw:1,rough:1.35,sand:1.55}[lie]||
 const RHO=-.5;
 function landingFor(ball,target,club,lie,z,shape,pen){
   const p=ppyOf(G.m),dx=target.x-ball.x,dy=target.y-ball.y,D=Math.hypot(dx,dy)||1,ux=dx/D,uy=dy/D,rx=-uy,ry=ux,sp=spread(D/p,club,lie),sa=shapeAdj(shape,D/p);
-  const lng=sa.shift-(pen||0)*(D/p)+sp.L*sa.Lk*(z[0]*Math.sqrt(1-RHO*RHO)+RHO*z[1]),lat=sp.T*z[1];
+  const lng=sa.shift-(pen||0)*(D/p)+sp.L*sa.Lk*(z[0]*Math.sqrt(1-RHO*RHO)+RHO*z[1]),lat=sp.T*z[1]*latLean(shape,z[1]);
   return{x:target.x+(ux*lng+rx*lat)*p,y:target.y+(uy*lng+ry*lat)*p};}
 function dispEllipse(sp,k){
   const vu=sp.L*sp.L,vr=sp.T*sp.T,cv=RHO*sp.L*sp.T,th=.5*Math.atan2(2*cv,vu-vr),m=(vu+vr)/2,d=Math.sqrt(((vu-vr)/2)**2+cv*cv);
@@ -2534,15 +2689,15 @@ function renderFull(){
       ${res?'':`<div class="pcontrols">
         <div class="ctl"><span class="lbl">Club</span>
           <div class="bag" role="group" aria-label="Choose a club">${bag.map(b=>`<button class="clubbtn ${G.aim.club&&b.i===G.aim.club.i?'on':''}" data-club="${b.i}" aria-pressed="${!!(G.aim.club&&b.i===G.aim.club.i)}">${esc(b.name)}<small>${b.max} yds</small></button>`).join('')}</div></div>
-        ${!G.aim.club?`<div class="ctl"><span class="lbl">Target</span><span class="pickprompt">Pick a club to see your aim point and where the shot can land.</span></div>`:`<div class="ctl"><span class="lbl">Target and shape</span><div class="tgtrow"><span class="tgt-out" id="tgtOut">${tgtText(ball,G.aim.t)}</span>${shapeCtlHTML()}</div>
+        ${!G.aim.club?`<div class="ctl"><span class="lbl">Target</span><span class="pickprompt">Pick a club to see your aim point and where the shot can land.</span></div>`:`<div class="ctl"><span class="lbl">Target and shape</span><div class="tgtrow"><span class="tgt-out" id="tgtOut">${tgtText(ball,G.aim.t)}</span>${shapeCtlHTML()}</div><p class="shapenote"></p>
           <div class="nudges" role="group" aria-label="Fine-tune target">
             <button class="btn sm" data-nudge="-2,0" aria-label="Aim 2 yards left">&#9664; Left</button><button class="btn sm" data-nudge="2,0" aria-label="Aim 2 yards right">Right &#9654;</button>
             <button class="btn sm" data-nudge="0,-3" aria-label="3 yards shorter">&minus; Shorter</button><button class="btn sm" data-nudge="0,3" aria-label="3 yards longer">Longer +</button></div>
-          <span class="hint">Pick a club, then drag anywhere on the hole to aim. Each club covers its own range of distances. The oval shows where about 86% of shots land, tilted like a right-hander's misses: left runs long, right comes up short. A draw flies a little longer and rolls out. A fade comes up a little shorter and holds greens.</span></div>
+          <span class="hint">Drag anywhere on the hole to aim. The oval shows where about 86% of shots land. The curved line is the ball flight for the shape you picked, and the oval slides toward the side that shape misses on. Shape it away from trouble: fade it when danger is left, draw it when danger is right.</span></div>
         <div class="ctl"><span class="lbl">Where it lands</span><div id="odds">${oddsHTML(oddsFor(ball,G.aim.t,G.aim.club,lie,shapesOn()?G.aim.shape:'straight'))}</div></div>
         <div><button class="btn primary" id="hit">Hit it</button></div>`}
       </div>
-      ${!G.aim.club?`<div class="aimbar pick" role="group" aria-label="Pick a club"><div class="ab-pick"><span class="ab-lbl">Pick a club</span><div class="bag ab-bag">${bag.map(b=>`<button class="clubbtn" data-club="${b.i}">${esc(b.name)}<small>${b.max} yds</small></button>`).join('')}</div></div></div>`:`<div class="aimbar withshape" role="group" aria-label="Aim summary"><div class="ab-shape">${shapeCtlHTML()}</div>
+      ${!G.aim.club?`<div class="aimbar pick" role="group" aria-label="Pick a club"><div class="ab-pick"><span class="ab-lbl">Pick a club</span><div class="bag ab-bag">${bag.map(b=>`<button class="clubbtn" data-club="${b.i}">${esc(b.name)}<small>${b.max} yds</small></button>`).join('')}</div></div></div>`:`<div class="aimbar withshape" role="group" aria-label="Aim summary"><div class="ab-shape">${shapeCtlHTML()}<p class="shapenote short"></p></div>
         <div class="ab-main"><button class="btn sm" data-clubstep="-1" aria-label="Longer club">&#9664;</button><b id="abClub">${esc(G.aim.club.name)}</b><button class="btn sm" data-clubstep="1" aria-label="Shorter club">&#9654;</button><span id="abDist" class="ab-dist">${tgtText(ball,G.aim.t)}</span></div>
         <div class="ab-odds" id="abOdds">${oddsMini(oddsFor(ball,G.aim.t,G.aim.club,lie,shapesOn()?G.aim.shape:'straight'))}</div>
         <button class="btn primary" data-hit="1">Hit it</button>
@@ -2552,6 +2707,7 @@ function renderFull(){
   </section>`;
   if(G.animating)drawPre(G.lastAnim);else drawStatic();
   drawAim();
+  if(!res&&G.aim.club)updShapeUI();
   if(!res){bindAim(ball,lie);const bg=document.querySelector('.bag'),on=bg&&bg.querySelector('.clubbtn.on');if(on)bg.scrollLeft=on.offsetLeft-bg.offsetLeft-bg.clientWidth/2+on.clientWidth/2;}
 }
 function drawAim(){
@@ -2561,8 +2717,10 @@ function drawAim(){
   if(!res&&!(G.aim&&G.aim.club)){g.innerHTML='';return;}
   const ball=res?G.lastAnim.from:G.trail[G.trail.length-1],club=res?G.last.club:G.aim.club,t=res?G.last.aimT:G.aim.t,shp=res?G.last.shape:(shapesOn()?G.aim.shape:'straight');
   const p=ppyOf(G.m),sc=G.view[2]/300,D=Math.hypot(t.x-ball.x,t.y-ball.y),sp0=spread(D/p,club,lie),sa=shapeAdj(shp,D/p),sp={L:sp0.L*sa.Lk,T:sp0.T},ang=Math.atan2(t.y-ball.y,t.x-ball.x)*180/Math.PI;
-  const ec={x:t.x+(t.x-ball.x)/(D||1)*sa.shift*p,y:t.y+(t.y-ball.y)/(D||1)*sa.shift*p};
-  let html=`<g opacity="${res?.5:1}"><line class="aimline2" x1="${ball.x}" y1="${ball.y}" x2="${t.x}" y2="${t.y}"/>
+  const S=SHAPES[shp]||SHAPES.straight,ux=(t.x-ball.x)/(D||1),uy=(t.y-ball.y)/(D||1),lean=S.miss*.18*sp0.T;
+  const ec={x:t.x+ux*sa.shift*p-uy*lean*p,y:t.y+uy*sa.shift*p+ux*lean*p};
+  const bow=S.sign*.15*D,qx=(ball.x+t.x)/2-uy*bow,qy=(ball.y+t.y)/2+ux*bow;
+  let html=`<g opacity="${res?.5:1}"><path class="aimline2" fill="none" d="M${ball.x} ${ball.y}Q${qx} ${qy} ${t.x} ${t.y}"/>
     ${(()=>{const e2=dispEllipse(sp,2),e1=dispEllipse(sp,1),rot=ang+e2.deg;return `<ellipse class="disp" cx="${ec.x}" cy="${ec.y}" rx="${e2.a*p}" ry="${e2.b*p}" transform="rotate(${rot} ${ec.x} ${ec.y})"/>
     <ellipse class="disp1" cx="${ec.x}" cy="${ec.y}" rx="${e1.a*p}" ry="${e1.b*p}" transform="rotate(${rot} ${ec.x} ${ec.y})"/>`;})()}
     <circle class="tgt" cx="${t.x}" cy="${t.y}" r="${4.5*sc}"/><line class="tgt" x1="${t.x-8*sc}" y1="${t.y}" x2="${t.x+8*sc}" y2="${t.y}"/><line class="tgt" x1="${t.x}" y1="${t.y-8*sc}" x2="${t.x}" y2="${t.y+8*sc}"/>
@@ -2577,7 +2735,7 @@ function setTarget(q){
   G.aim.t={x:ball.x+dx*k,y:ball.y+dy*k};
   drawAim();const o=document.getElementById('tgtOut');if(o)o.textContent=tgtText(ball,G.aim.t);
   const ab=document.getElementById('abDist');if(ab)ab.textContent=tgtText(ball,G.aim.t);
-  cancelAnimationFrame(oddsRaf);oddsRaf=requestAnimationFrame(()=>{const od=oddsFor(ball,G.aim.t,G.aim.club,lie,shapesOn()?G.aim.shape:'straight');const el=document.getElementById('odds');if(el)el.innerHTML=oddsHTML(od);const ao=document.getElementById('abOdds');if(ao)ao.innerHTML=oddsMini(od);});
+  cancelAnimationFrame(oddsRaf);oddsRaf=requestAnimationFrame(()=>{if(!G||G.phase!=='choose'||!G.aim||!G.aim.club||!G.aim.t||G.aimCtx!==c)return;const od=oddsFor(ball,G.aim.t,G.aim.club,lie,shapesOn()?G.aim.shape:'straight');const el=document.getElementById('odds');if(el)el.innerHTML=oddsHTML(od);const ao=document.getElementById('abOdds');if(ao)ao.innerHTML=oddsMini(od);updShapeUI(od);});
 }
 function syncClubUI(){
   document.querySelectorAll('.clubbtn').forEach(b=>{const on=+b.dataset.club===G.aim.club.i;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);
@@ -2621,7 +2779,7 @@ function fullText(o,land,ball,target){
 function hitFull(){
   if(!G.aim||!G.aim.club)return;
   const s=getState(G.state),ball=G.trail[G.trail.length-1],lie=curLie(s),club=G.aim.club,target={...G.aim.t};
-  const r=G.daily?mulberry(hash([dateKey,G.m.id,G.shotNo,club.name,Math.round(target.x),Math.round(target.y)].join('|'))):Math.random;
+  const r=G.daily?mulberry(hash([G.dk||dateKey,G.m.id,G.shotNo,club.name,Math.round(target.x),Math.round(target.y)].join('|'))):Math.random;
   const shape=shapesOn()?(G.aim.shape||'straight'):'straight';
   const zz=gauss2(r),lp=liePen(lie,r()),land=landingFor(ball,target,club,lie,zz,shape,lp);
   const out=outcomeAt(land,ball,G.state,true);
@@ -2630,7 +2788,7 @@ function hitFull(){
   const text=fullText(out,land,ball,target);
   G.strokes+=1+out.pen;G.calls.push(gr[0]);G.lostTotal=(G.lostTotal||0)+delta;
   G.shots.push({club:club.name+(shape!=='straight'?' '+shape:''),label:club.name,text,g:gr,pen:out.pen});
-  G.last={from:G.state,opt:club.name,out:{to:out.to,pen:out.pen},delta,g:gr,graded:true,text,full:true,ev,best,aimT:target,club,shape,lieLoss:lp>0?Math.round(lp*ydsBetween(ball,target)):0,lie};
+  G.last={from:G.state,opt:club.name,out:{to:out.to,pen:out.pen},delta,g:gr,graded:true,text,full:true,ev,best,aimT:target,club,shape,z:zz,lieLoss:lp>0?Math.round(lp*ydsBetween(ball,target)):0,lie};
   const fromIdx=G.trail.length-1;let sp=null;
   if(out.pen){sp={x:land.x,y:land.y};G.splashes.push({...sp});G.trail.push({...sp,gap:true});}
   const next=out.to===HOLED?pinPt():{x:out.pos.x,y:out.pos.y};G.trail.push(next);
@@ -2819,7 +2977,7 @@ function finishPuttTurn(){
 }
 function strokePutt(){
   const s=getState(G.state),g=G.green;
-  const seed=G.daily?hash([dateKey,G.m.id,G.state,G.shotNo,'putt'].join('|')):(Math.random()*4294967296)>>>0;
+  const seed=G.daily?hash([G.dk||dateKey,G.m.id,G.state,G.shotNo,'putt'].join('|')):(Math.random()*4294967296)>>>0;
   const sim=simulate(g.aimX,g.pace,seed);
   let D=Math.hypot(g.ball.x,g.ball.y),r=Math.hypot(sim.rest.x,sim.rest.y),gopher=false;
   let gopherFt=0;if(G.m.gopher&&!sim.holed&&r<2){gopher=true;gopherFt=r;sim.holed=true;const last=sim.path[sim.path.length-1];sim.path.push({x:last.x,y:last.y,t:last.t+1.05},{x:0,y:0,t:last.t+1.45});sim.rest={x:0,y:0};r=0;}
@@ -2981,11 +3139,16 @@ function renderRoundEnd(){
     </tbody></table></div>
     <p class="story"><b>What happened.</b> ${esc(r.story)}</p>
     ${ROUND.ranked?lbHTML('lbw'):''}
-    <div class="share"><h3>Share your round</h3><pre id="sharetxt">${esc(share)}</pre><div class="cta"><button class="btn" id="copy">Copy</button><span class="muted" id="copied" aria-live="polite"></span></div></div>
+    ${shareBlockHTML('Share your round',share)}
     <div class="cta"><button class="btn primary" data-act="round" data-r="${r.id}">${r.weekly?'Practice round':'Play it again'}</button><button class="btn" data-act="home">All challenges</button></div>
   </section>`;
   if(ROUND.ranked){store.set(WKEY,{done:true,tp:you.tp,rating,calls,scores:ROUND.scores.slice()});mountLB('lbw',PERIOD.board,{title:`${PERIOD.label} leaderboard`,scoreLabel:'To par',fmt:fmtTP,entry:{score:you.tp,rating,detail:{scores:ROUND.scores,beat:you.tp<realTP}}});}
-  document.getElementById('copy').onclick=()=>{const done=()=>document.getElementById('copied').textContent='Copied.';if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(share).then(done,()=>selectShare());else selectShare();};
+  track('round_finish',{r:r.id,ranked:!!ROUND.ranked,tp:you.tp,beat:you.tp<realTP,rating});
+  {const bd=ROUND.ranked?PERIOD.board:null,snap={tag:r.weekly?'WEEKLY 18':'CHASE THE LEAD',kicker:`${r.player} · ${r.event} ${r.year} · ${r.span}`,title:r.title,
+      you:{label:'YOU',val:fmtTP(you.tp),sub:`${ROUND.scores.reduce((a,b)=>a+b,0)} strokes`},pro:{label:r.short.toUpperCase(),val:fmtTP(realTP),sub:'Real finish'},verdict,rating,
+      card:r.holes.map((hh,i)=>({no:hh.holeNo,par:hh.par,s:ROUND.scores[i]})).filter(h=>h.s!=null),cta:you.tp<realTP?`I beat ${r.short}. Can you?`:'Can you beat it?'};
+    prepShare(()=>({...snap,extras:shareExtras(bd,false)}),`clutch-caddie-${r.weekly?'weekly':'round'}.png`,share);}
+  document.getElementById('copy').onclick=()=>{track('share',{kind:'text',method:'copy'});const done=()=>document.getElementById('copied').textContent='Copied.';if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(share).then(done,()=>selectShare());else selectShare();};
 }
 function roundCardHTML(r){return `<button class="mcard" data-act="round" data-r="${r.id}"><span class="badge">${esc(r.short)} · ${r.year}</span><span class="t">${esc(r.title)}</span><span class="s">${esc(r.event)} · ${esc(r.span)}</span><span class="beat">${r.cta?esc(r.cta):`Start ${fmtTP(r.startToPar)}. Chase the lead.`}</span></button>`;}
 
@@ -2994,6 +3157,7 @@ $app.addEventListener('click',e=>{
   if(G&&G.animating&&e.target.closest('#course')){skipAnim();return;}
   const b=e.target.closest('button');if(!b)return;
   if(b.dataset.opt&&G&&G.phase==='choose'){choose(b.dataset.opt);return;}
+  if(b.id==='shareImgBtn'){doShareImage();return;}
   if(b.id==='next'){advance();return;}
   if(b.id==='skip'){skipAnim();return;}
   if(b.dataset.shape&&G&&G.phase==='choose'){setShape(b.dataset.shape);return;}
@@ -3010,18 +3174,19 @@ $app.addEventListener('click',e=>{
   if(b.id==='replay'){const c=document.getElementById('course');if(window.innerWidth<820&&c)c.scrollIntoView({behavior:'smooth',block:'start'});animateShot(G.lastAnim,()=>drawStatic());return;}
   cancelAnim();
   const act=b.dataset.act;
-  if(act==='daily')start(todayMoment.id,true);
-  else if(act==='practice')start(b.dataset.m,false);
+  if(act==='daily'){track('daily_start',{day:dayNo});start(todayMoment.id,true);}
+  else if(act==='yesterday')playYesterday();
+  else if(act==='practice'){track('practice_start',{m:b.dataset.m});start(b.dataset.m,false);}
   else if(act==='home'){ROUND=null;renderIntro();window.scrollTo({top:0});}
-  else if(act==='round'){cancelAnim();startRound(b.dataset.r);window.scrollTo({top:0});}
+  else if(act==='round'){cancelAnim();track('round_start',{r:b.dataset.r});startRound(b.dataset.r);window.scrollTo({top:0});}
   else if(act==='nexthole'){ROUND.i++;startHoleN();window.scrollTo({top:0});}
   else if(act==='roundend'){renderRoundEnd();window.scrollTo({top:0});}
   else if(act==='playoff'){startPlayoffHole();window.scrollTo({top:0});}
-  else if(act==='weekly'){cancelAnim();startWeekly();}
+  else if(act==='weekly'){cancelAnim();track('round_start',{r:weeklyRound.id,ranked:true});startWeekly();}
   else if(act==='weeklyboard')renderBoardScreen('weekly');
   else if(act==='dailyboard')renderBoardScreen('daily');
-  else if(act==='profile'){cancelAnim();renderProfile();}
-  else if(act==='cup'){cancelAnim();renderCup();}
+  else if(act==='profile'){cancelAnim();track('profile_view');renderProfile();}
+  else if(act==='cup'){cancelAnim();track('cup_view');renderCup();}
 });
 document.getElementById('settingsBtn').onclick=openSettings;
 document.getElementById('profileBtn').onclick=()=>{cancelAnim&&cancelAnim();hideTip();renderProfile();};
@@ -3037,17 +3202,17 @@ function snapG(){
     else{state=G.last.out.to;shotNo++;}
   }
   const green=G.green?{...G.green,fresh:false,ball:(G.phase==='result'&&G.last&&G.last.putt&&G.lastPutt&&!G.lastPutt.holed)?{...G.lastPutt.rest}:G.green.ball}:null;
-  return {round:G.round?ROUND:null,green,seed:G.seed,mid:G.m.id,daily:G.daily,state,strokes:G.strokes,calls:G.calls,shots:G.shots,trail:G.trail,splashes:G.splashes,shotNo,lostTotal:G.lostTotal,phase,rating};
+  return {round:G.round?ROUND:null,green,seed:G.seed,mid:G.m.id,daily:G.daily,dk:G.dk||null,state,strokes:G.strokes,calls:G.calls,shots:G.shots,trail:G.trail,splashes:G.splashes,shotNo,lostTotal:G.lostTotal,phase,rating};
 }
 window.claude?.hot?.snapshot?.(snapG);
-function boot(data){
+function boot(data){trackOpen();
   const d=data&&data.mid?data:null;
   if(!d){renderIntro();return;}
   if(!restoreG(d))renderIntro();
 }
 function restoreG(d){
   const m=findMoment(d.mid);if(!m)return false;if(d.round)ROUND=d.round;
-  G={m,green:d.green||null,seed:d.seed||dateKey,daily:d.daily,state:d.state,strokes:d.strokes,calls:d.calls,shots:d.shots,trail:d.trail,splashes:d.splashes||[],shotNo:d.shotNo,lostTotal:d.lostTotal||0,phase:d.phase,last:null,view:[0,0,300,520],rating:d.rating};
+  G={m,green:d.green||null,seed:d.seed||dateKey,daily:d.daily,dk:d.dk||(d.daily?dateKey:null),dno:d.daily?dayNoOf(d.dk||dateKey):null,state:d.state,strokes:d.strokes,calls:d.calls,shots:d.shots,trail:d.trail,splashes:d.splashes||[],shotNo:d.shotNo,lostTotal:d.lostTotal||0,phase:d.phase,last:null,view:[0,0,300,520],rating:d.rating};
   if(d.round)G.round=ROUND;
   if(G.phase==='end'){if(G.round)renderHoleDone();else renderEnd();}else renderPlay();
   return true;

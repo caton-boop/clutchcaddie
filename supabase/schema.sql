@@ -244,11 +244,71 @@ begin
                      where player_id = p_player and kind = 'daily' and detail ? 'par'),
     'best_weekly', (select min(score) from board_results where player_id = p_player and kind <> 'daily'),
     'beat_pro', (select count(*) from board_results where player_id = p_player and (detail->>'beat')::boolean),
+    'days', coalesce((select json_agg(d.bdate order by d.bdate desc) from (
+        select distinct bdate from board_results where player_id = p_player and kind = 'daily'
+        order by bdate desc limit 400) d), '[]'::json),
     'recent', coalesce((select json_agg(x) from (
         select board, kind, bdate, score, rk as rank, field, points, detail->>'par' as par
         from board_results where player_id = p_player order by bdate desc, created_at desc limit 14) x), '[]'::json)
   );
 end $$;
+
+-- ---------- analytics: a small first-party event log for the game funnel ----------
+-- The game sends events like app_open, daily_start, daily_finish, post_score and share. Each row has a
+-- random device ID (and the player ID if they have a profile). No names, emails or IP addresses.
+create table if not exists public.events (
+  id          bigint generated always as identity primary key,
+  created_at  timestamptz not null default now(),
+  day         date        not null default public.et_today(),
+  device      uuid,
+  player      uuid,
+  session     text,
+  name        text        not null,
+  props       jsonb
+);
+create index if not exists events_day_name_idx on public.events (day, name);
+create index if not exists events_device_idx on public.events (device, day);
+alter table public.events enable row level security;
+revoke all on table public.events from anon, authenticated;
+
+create or replace function public.log_events(p_device uuid, p_player uuid, p_session text, p_events jsonb)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_events is null or jsonb_typeof(p_events) <> 'array' or jsonb_array_length(p_events) > 25 then return; end if;
+  insert into events (device, player, session, name, props)
+  select p_device, p_player, left(p_session, 16), e->>'n',
+         case when length(coalesce(e->'p', '{}'::jsonb)::text) <= 600 then e->'p' end
+  from jsonb_array_elements(p_events) e
+  where (e->>'n') ~ '^[a-z_]{2,24}$';
+end $$;
+
+-- Ready-made reports. Open them in Table Editor (they are listed with the tables) or select from them
+-- in the SQL Editor. They are private: the public key cannot read them.
+create or replace view public.analytics_funnel with (security_invoker = on) as
+select day,
+       count(distinct device) filter (where name = 'app_open')       as visitors,
+       count(distinct device) filter (where name = 'daily_start')    as started_daily,
+       count(distinct device) filter (where name = 'daily_finish')   as finished_daily,
+       count(distinct device) filter (where name = 'post_score')     as posted_score,
+       count(distinct device) filter (where name = 'share')          as shared,
+       count(distinct device) filter (where name = 'profile_create') as new_profiles,
+       count(distinct device) filter (where name = 'round_finish')   as finished_weekly
+from public.events group by day order by day desc;
+
+create or replace view public.analytics_retention with (security_invoker = on) as
+with f as (select device, min(day) as d0 from public.events where device is not null group by device),
+     a as (select distinct device, day from public.events where device is not null)
+select f.d0 as first_day,
+       count(*) as new_devices,
+       count(*) filter (where exists (select 1 from a where a.device = f.device and a.day = f.d0 + 1)) as back_next_day,
+       count(*) filter (where exists (select 1 from a where a.device = f.device and a.day between f.d0 + 1 and f.d0 + 7)) as back_within_7_days
+from f group by f.d0 order by f.d0 desc;
+
+create or replace view public.analytics_events with (security_invoker = on) as
+select day, name, count(*) as events, count(distinct device) as devices
+from public.events group by day, name order by day desc, events desc;
+
+revoke all on table public.analytics_funnel, public.analytics_retention, public.analytics_events from anon, authenticated;
 
 -- ---------- permissions ----------
 revoke all on function public.create_player(uuid, text) from public;
@@ -263,9 +323,12 @@ grant execute on function public.submit_score(text, uuid, text, integer, integer
 grant execute on function public.get_board(text, uuid, integer) to anon, authenticated;
 grant execute on function public.get_caddy_cup(uuid, integer) to anon, authenticated;
 grant execute on function public.get_player_stats(uuid) to anon, authenticated;
+revoke all on function public.log_events(uuid, uuid, text, jsonb) from public;
+grant execute on function public.log_events(uuid, uuid, text, jsonb) to anon, authenticated;
 
 -- ---------- handy admin queries (run by hand) ----------
 --   Remove a score:      delete from public.scores where board = 'daily:2026-11-06' and name = 'SomeName';
 --   Rename a player:     update public.players set name = 'NewName' where name = 'OldName';
 --   Block a word:        insert into public.blocked_words (w) values ('word');
+--   Clear old analytics: delete from public.events where day < current_date - 180;
 --   Start a new season:  insert into public.seasons (name, starts, ends) values ('Season 2', '2027-04-01', '2027-08-31');

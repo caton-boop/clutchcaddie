@@ -67,6 +67,7 @@ functions, which do all the checking:
 | `get_board` | One leaderboard, with ranks and Caddy Cup points |
 | `get_caddy_cup` | Season standings |
 | `get_player_stats` | The profile page: rank, points, wins, top 10s, averages, recent results |
+| `log_events` | Records game events for your analytics (see below) |
 
 **Profiles:** names are unique (ignoring case) and run through the blocked word list. Player codes
 are stored hashed, so nobody (including you) can read them from the database. A lost code cannot be
@@ -82,6 +83,21 @@ recovered, and the game tells players to save it.
 - Daily: `daily:YYYY-MM-DD` (US Eastern date), ranked by strokes, then clutch rating
 - Weekly: `weekly:YYYY-MM-DD` (the Monday the week started), ranked by total to par, then rating
 - Monthly: `monthly:YYYY-MM` if you switch `period` to `'month'`
+
+**Analytics.** Two layers:
+- Page views and visitors: Vercel Web Analytics. Turn it on once in Vercel: open the project, click
+  the Analytics tab, click Enable. No cookies, so no consent banner needed for this part.
+- The game funnel: the game logs events (app_open, daily_start, daily_finish, post_score, share,
+  profile_create, round_start, round_finish and a few more) to the `events` table with a random
+  device ID. No names, emails or IPs. Three ready-made reports sit in Table Editor next to the tables:
+  - `analytics_funnel`: per day, how many devices visited, started the daily, finished it, posted, shared
+  - `analytics_retention`: of the devices that showed up each day, how many came back the next day and within a week
+  - `analytics_events`: every event type per day
+  Traffic sources show up in `app_open` events: add `?utm_source=tiktok` (or `ig`, `x`) to links you post.
+
+**Streaks.** A streak is consecutive days with a ranked daily. Players who miss a day see a
+"Play yesterday's hole" card on the home page that saves the streak (and still earns Cup points).
+When rewarded ads go in, the ad plays in `playYesterday()` in `index.html`.
 
 **Moderation** (SQL Editor):
 - Rename a player: `update public.players set name = 'NewName' where lower(name) = 'badname';`
