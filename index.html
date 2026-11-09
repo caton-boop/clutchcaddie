@@ -1659,7 +1659,7 @@ function holeSVG(m,opts={}){
 
 /* --- screens --- */
 /* ===== Weekly (or monthly) 18-hole challenge. Set CC_CONFIG.period='month' for monthly. ===== */
-const CC=window.CC_CONFIG||{};
+const CC=window.CC_CONFIG||{};if(CC.supabaseUrl)CC.supabaseUrl=String(CC.supabaseUrl).trim().replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
 const CHALLENGE_PERIOD=CC.period==='month'?'month':'week';
 const PERIOD=(()=>{const day=Date.UTC(ET.y,ET.m-1,ET.d);
   if(CHALLENGE_PERIOD==='month'){const idx=(ET.y-2026)*12+(ET.m-11)+1,key=`${ET.y}-${String(ET.m).padStart(2,'0')}`,next=Date.UTC(ET.y,ET.m,1);
